@@ -1,11 +1,12 @@
-import Home from "./assets/component/Pages/Home"
+import Home from "./Component/pages/Home"
+
 
 function App() {
   
 
   return (
     <>
-      <Home/>
+    <Home/>
       <h1>hiiiii</h1>
     </>
   )
