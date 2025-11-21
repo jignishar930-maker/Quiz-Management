@@ -1,0 +1,76 @@
+/* src/components/StudentDashboard.css */
+
+.dashboard-container {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.dashboard-header h2 {
+    color: #333;
+    font-size: 2em;
+}
+
+.logout-btn {
+    padding: 10px 20px;
+    background-color: #dc3545; /* લાલ */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
+.quiz-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.quiz-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.quiz-card h3 {
+    color: #007bff;
+    margin-top: 0;
+}
+
+.quiz-card p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.start-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745; /* લીલો */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.start-btn:hover {
+    background-color: #1e7e34;
+}
