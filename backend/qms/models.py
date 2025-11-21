@@ -1,3 +1,7 @@
-from django.db import models
+# backend/qms/apps.py
+from django.apps import AppConfig
 
-# Create your models here.
+
+class QmsConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'qms'
