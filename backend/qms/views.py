@@ -1,85 +1,58 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from .models import Quiz, Question
-from .serializers import QuizSerializer, QuestionSerializer
-from .permissions import IsTeacher
+from rest_framework import generics
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 
+from .models import Quiz, Question, Option, Result, StudentAnswer, UserProfile
+from .serializers import (
+    QuizSerializer, 
+    QuestionSerializer, 
+    ResultSerializer,
+    # Add other serializers if you have them, e.g., OptionSerializer
+)
+
+# --- 1. ViewSets for CRUD Operations ---
+
+# Quiz ViewSet: Allows anyone to view, but only logged-in users to create/edit
 class QuizViewSet(viewsets.ModelViewSet):
- 
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
-    permission_classes = [IsAuthenticated, IsTeacher] 
-
+    
+    # Permission: Allows reading (GET) for everyone, but writing for authenticated users only.
+    permission_classes = [IsAuthenticatedOrReadOnly] 
+    
+    # Automatically set the user who creates the quiz
     def perform_create(self, serializer):
+        # We assume the 'created_by' field in the Quiz model is linked to User
         serializer.save(created_by=self.request.user)
 
+
+# Question ViewSet: Allowing everyone to view questions is usually fine for a quiz app
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [IsAuthenticated, IsTeacher]
+    permission_classes = [AllowAny] 
+    
 
+# --- 2. Generic Views (You can keep these, but they are often optional) ---
 
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Quiz, Question, Option, Result, UserProfile 
-from .serializers import StudentQuizListSerializer, StudentQuizAttemptSerializer
-from .permissions import IsTeacher 
+class AvailableQuizzesView(generics.ListAPIView):
+    queryset = Quiz.objects.all()
+    serializer_class = QuizSerializer
+    permission_classes = [AllowAny]
 
-class AvailableQuizzesView(APIView):
+class SubmitQuizView(generics.CreateAPIView):
+    # Permission: Submitting a quiz result usually requires the user to be logged in
+    serializer_class = ResultSerializer
     permission_classes = [IsAuthenticated] 
     
-    def get(self, request):
-        if request.user.userprofile.role != 'student':
-            return Response({"detail": "Only students can access this."}, status=status.HTTP_403_FORBIDDEN)
-            
-        quizzes = Quiz.objects.all() 
-        serializer = StudentQuizListSerializer(quizzes, many=True)
-        return Response(serializer.data)
+    # Logic to calculate and save the score would go here
+    # def perform_create(self, serializer):
+    #     # ... scoring logic ...
+    #     serializer.save(user=self.request.user, score=calculated_score)
 
-class SubmitQuizView(APIView):
+    # Submit Quiz View: Handles POST request for quiz submission
+class SubmitQuizView(generics.CreateAPIView):
+    # આ ResultSerializer માં સ્કોરિંગ લોજિક છે
+    serializer_class = ResultSerializer
+    # ક્વિઝ સબમિટ કરવા માટે યુઝરનો લોગઇન હોવો જરૂરી છે
     permission_classes = [IsAuthenticated]
-
-    def post(self, request, quiz_id):
-        user = request.user
-        if user.userprofile.role != 'student':
-            return Response({"detail": "Only students can submit quizzes."}, status=status.HTTP_403_FORBIDDEN)
-
-        try:
-            quiz = Quiz.objects.get(id=quiz_id)
-        except Quiz.DoesNotExist:
-            return Response({"detail": "Quiz not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        student_answers = request.data.get('answers', []) 
-        total_score = 0
-        total_marks = 0
-
-        # 2. score count
-        for item in student_answers:
-            question_id = item.get('question_id')
-            selected_option_id = item.get('selected_option_id')
-
-            try:
-                question = Question.objects.get(id=question_id, quiz=quiz)
-                correct_option = Option.objects.get(question=question, is_correct=True)
-                total_marks += question.marks
-                
-                if selected_option_id and correct_option.id == selected_option_id:
-                    total_score += question.marks
-            except Question.DoesNotExist:
-                continue 
-
-        # 3. resut display 
-        Result.objects.create(
-            student=user,
-            quiz=quiz,
-            score=total_score,
-            total_marks=total_marks
-        )
-
-        return Response({
-            "message": "Quiz submitted successfully.",
-            "score": total_score,
-            "total_marks": total_marks
-        }, status=status.HTTP_200_OK)

@@ -18,8 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import include
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('login_app.urls')),
-    path('api/', include('qms.urls')),      
+    
+    # 1. Login અને User મેનેજમેન્ટ માટેનો પાથ
+    path('api/auth/', include('login_app.urls')), 
+    
+    # 2. ક્વિઝ મેનેજમેન્ટ સિસ્ટમ માટેનો પાથ
+    path('api/qms/', include('qms.urls')),
 ]

@@ -1,6 +1,5 @@
-# qms/permissions.py
-
 from rest_framework import permissions
+
 
 class IsTeacher(permissions.BasePermission):
     """

@@ -1,136 +1,104 @@
-// src/components/QuizAttempt.jsx
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import './QuizAttempt.css'; 
 
-const API_BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'http://127.0.0.1:8000/api/qms'; 
 
-const QuizAttempt = () => {
-    const { quizId } = useParams(); // URL માંથી ક્વિઝ ID મેળવો
+function QuizAttempt() {
+    const { quizId } = useParams(); // Get quizId from the URL (e.g., /attempt/1)
     const navigate = useNavigate();
     
-    const [quizData, setQuizData] = useState(null);
+    const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    // જવાબો સ્ટોર કરવા માટે: { question_id: selected_option_id, ... }
-    const [answers, setAnswers] = useState({});
-    
-    const authToken = localStorage.getItem('authToken');
-
-    // ક્વિઝ ડેટા ફેચ કરો (નોંધ: આના માટે બેકએન્ડમાં એક GET API બનાવવું પડશે જે એક ચોક્કસ Quiz ID નો ડેટા આપે)
-    const fetchQuizData = async () => {
-        if (!authToken) {
-            navigate('/login');
-            return;
-        }
-
-        try {
-            // ધારો કે તમે ક્વિઝ જોવા માટે /api/quizzes/<id> નો ઉપયોગ કરી શકો છો (પરંતુ સ્ટુડન્ટ સિરિયલાઇઝર સાથે)
-            // જો બેકએન્ડમાં આ API ફક્ત teacher માટે હોય, તો તમારે student માટે એક અલગ GET API બનાવવું પડશે.
-            const response = await axios.get(
-                `${API_BASE_URL}/api/quizzes/${quizId}/`, 
-                {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                }
-            );
-            // અહીં ધારીએ કે બેકએન્ડ (view માં) સ્ટુડન્ટને StudentQuizAttemptSerializer દ્વારા ડેટા મોકલે છે
-            setQuizData(response.data);
-            setLoading(false);
-        } catch (err) {
-            console.error("Failed to fetch quiz details:", err);
-            setError('ક્વિઝનો ડેટા મેળવવામાં નિષ્ફળ.');
-            setLoading(false);
-            if (err.response && err.response.status === 401) {
-                navigate('/login');
-            }
-        }
-    };
+    const [error, setError] = useState(null);
+    const [answers, setAnswers] = useState({}); // Stores answers: {questionId: selectedOptionId}
 
     useEffect(() => {
-        fetchQuizData();
-    }, [quizId, navigate]);
+        const token = localStorage.getItem('access_token');
+        const config = {
+            headers: {
+                ...(token && { Authorization: `Bearer ${token}` }) 
+            }
+        };
+        
+        // Fetch questions filtered by the quizId. Assumes QuestionViewSet supports filtering by quiz_id
+        axios.get(`${BASE_URL}/questions/?quiz_id=${quizId}`, config) 
+            .then(response => {
+                setQuestions(response.data.results || response.data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error("Error fetching questions:", err);
+                setError(`Error loading quiz ${quizId}. Check console.`);
+                setLoading(false);
+            });
+    }, [quizId]);
 
-    // વિકલ્પ પસંદ થવા પર જવાબ સ્ટોર કરો
     const handleOptionChange = (questionId, optionId) => {
-        setAnswers({
-            ...answers,
-            [questionId]: optionId,
-        });
-    };
-
-    // ક્વિઝ સબમિટ કરો
-    const handleSubmit = async () => {
-        const finalAnswers = Object.keys(answers).map(qId => ({
-            question_id: parseInt(qId),
-            selected_option_id: answers[qId],
+        setAnswers(prevAnswers => ({
+            ...prevAnswers,
+            [questionId]: optionId
         }));
-
-        try {
-            const response = await axios.post(
-                `${API_BASE_URL}/api/student/submit/${quizId}/`,
-                { answers: finalAnswers },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                    }
-                }
-            );
-            
-            // સબમિશન પછી સ્કોર પેજ પર રીડાયરેક્ટ કરો
-            navigate('/student/scores', { state: { result: response.data } });
-
-        } catch (err) {
-            console.error("Quiz submission failed:", err);
-            setError(err.response?.data?.detail || 'ક્વિઝ સબમિટ કરવામાં ભૂલ આવી.');
-        }
     };
 
-    if (loading) return <div className="quiz-attempt-container"><h2>લોડિંગ ક્વિઝ...</h2></div>;
-    if (error) return <div className="quiz-attempt-container"><p className="error-message">{error}</p></div>;
-    if (!quizData) return <div className="quiz-attempt-container"><p>ક્વિઝ ડેટા ઉપલબ્ધ નથી.</p></div>;
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        
+        // 🚨 Next major step: Implement the API call to submit these answers to the backend.
+        
+        console.log("Submitting Answers:", answers);
+        alert("Answers submitted! (Next step: implement submit API call)");
 
+        // For now, just navigate back to the dashboard or to a score page placeholder
+        // navigate('/student/dashboard');
+    };
+
+    if (loading) {
+        return <div style={{padding: '20px'}}>Loading Quiz Questions...</div>;
+    }
+
+    if (error) {
+        return <div style={{ color: 'red', padding: '20px' }}>{error}</div>;
+    }
+    
+    if (questions.length === 0) {
+        return <div style={{padding: '20px'}}>No questions found for this quiz. Check Django Admin.</div>;
+    }
 
     return (
-        <div className="quiz-attempt-container">
-            <h2>{quizData.title}</h2>
-            <p className="quiz-description">{quizData.description}</p>
+        <div style={{ padding: '20px' }}>
+            <h2>Quiz Attempt: Quiz ID {quizId}</h2>
+            <p>Total Questions: {questions.length}</p>
             
-            {quizData.questions.map((question, index) => (
-                <div key={question.id} className="question-card">
-                    <h4>{index + 1}. {question.text} (Marks: {question.marks})</h4>
-                    
-                    <div className="options-list">
-                        {question.options.map((option) => (
-                            <div key={option.id} className="option-item">
-                                <input
-                                    type="radio"
-                                    id={`q${question.id}-o${option.id}`}
-                                    name={`question-${question.id}`}
-                                    value={option.id}
-                                    onChange={() => handleOptionChange(question.id, option.id)}
-                                    checked={answers[question.id] === option.id}
-                                />
-                                <label htmlFor={`q${question.id}-o${option.id}`}>{option.text}</label>
-                            </div>
-                        ))}
+            <form onSubmit={handleSubmit}>
+                {questions.map((question, index) => (
+                    <div key={question.id} style={{ marginBottom: '30px', border: '1px solid #ddd', padding: '15px', borderRadius: '5px' }}>
+                        <h4>{index + 1}. {question.text} (Marks: {question.marks})</h4>
+                        
+                        <div>
+                            {/* Render Options for the current question */}
+                            {question.options.map(option => (
+                                <label key={option.id} style={{ display: 'block', margin: '10px 0' }}>
+                                    <input
+                                        type="radio"
+                                        name={`question_${question.id}`}
+                                        value={option.id}
+                                        checked={answers[question.id] === option.id}
+                                        onChange={() => handleOptionChange(question.id, option.id)}
+                                    />
+                                    {option.text}
+                                </label>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            ))}
-            
-            <button 
-                onClick={handleSubmit} 
-                className="submit-quiz-btn"
-                disabled={Object.keys(answers).length !== quizData.questions.length}
-            >
-                ક્વિઝ સબમિટ કરો
-            </button>
-            <p className="submission-note">બધા પ્રશ્નોના જવાબ આપવા ફરજિયાત છે.</p>
+                ))}
+                
+                <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', marginTop: '20px' }}>
+                    Submit Quiz
+                </button>
+            </form>
         </div>
     );
-};
+}
 
 export default QuizAttempt;

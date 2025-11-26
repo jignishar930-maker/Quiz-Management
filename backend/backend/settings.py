@@ -45,9 +45,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-   
-    'corsheaders.middleware.CorsMiddleware', 
+    'corsheaders.middleware.CorsMiddleware', # 👈 અહીં ઉમેરો
+    'django.middleware.security.SecurityMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -79,14 +78,20 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
+# backend/settings.py માં સુધારેલો DATABASES વિભાગ
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'your_quiz_db_name',         # તમારા MySQL ડેટાબેઝનું નામ
-        'USER': 'your_mysql_user',           # તમારા MySQL યુઝરનું નામ
-        'PASSWORD': 'your_mysql_password',   # તમારા MySQL પાસવર્ડ
-        'HOST': 'localhost',                 # સામાન્ય રીતે 'localhost'
-        'PORT': '3306',                      # MySQL નો ડિફોલ્ટ પોર્ટ
+        'NAME': 'admin',
+        'USER': 'django_user',
+        'PASSWORD': 'jigu',
+        'HOST': '127.0.0.1', 
+        'PORT': '3306',           
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },                       
     }
 }
 
@@ -132,18 +137,13 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# backend/settings.py (ફાઇલના અંતમાં ગમે ત્યાં ઉમેરો)
-
-# --- CORS SETTINGS ---
 CORS_ALLOWED_ORIGINS = [
-    # તમારા React/Vite Dev Server નો ડિફોલ્ટ પોર્ટ
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175", 
+    "http://localhost:5173", 
+    "http://127.0.0.1:5173",
 ]
+CORS_ALLOW_CREDENTIALS = True
 
-# જો તમે production માં ડિપ્લોય કરો, તો CORS_ALLOW_ALL_ORIGINS = True વાપરવાનું ટાળો
-CORS_ALLOW_CREDENTIALS = True # જો તમારે Cookies, Authorization Headers વગેરે મોકલવા હોય
+CORS_ALLOW_CREDENTIALS = True 
 
 # --- REST FRAMEWORK SETTINGS ---
 REST_FRAMEWORK = {

@@ -1,105 +1,82 @@
-// src/components/Login.jsx
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './Login.css';
 
-const API_BASE_URL = 'http://localhost:8000';
+// JWT ટોકન મેળવવાનો URL (જે તમે હમણાં જ સેટ કર્યો છે)
+const LOGIN_URL = 'http://127.0.0.1:8000/api/auth/token/'; 
 
-const Login = () => {
-    const [credentials, setCredentials] = useState({
-        username: '',
-        password: ''
-    });
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+function Login() {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setCredentials({
-            ...credentials,
-            [e.target.name]: e.target.value
-        });
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
+        setError(null);
 
         try {
-            // Django API ને લોગિન રિક્વેસ્ટ મોકલો
-            const response = await axios.post(
-                `${API_BASE_URL}/api/login/`,
-                credentials
-            );
+            // API ને POST વિનંતી મોકલો
+            const response = await axios.post(LOGIN_URL, {
+                username,
+                password,
+            });
 
-            const { token, role } = response.data;
+            // ઍક્સેસ અને રિફ્રેશ ટોકન્સ સ્ટોર કરો 
+            // આ ટોકન્સનો ઉપયોગ હવે પછીના સુરક્ષિત API કૉલ્સમાં થશે
+            localStorage.setItem('access_token', response.data.access);
+            localStorage.setItem('refresh_token', response.data.refresh);
+            
+            alert("Successfuiiy login! Start the stoken.");
 
-            // ૧. JWT Token અને Role ને Local Storage માં સેવ કરો
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('userRole', role);
-
-            // ૨. Role ના આધારે ડેશબોર્ડ પર રીડાયરેક્ટ કરો
-            if (role === 'teacher') {
-                navigate('/admin/dashboard');
-            } else if (role === 'student') {
-                navigate('/student/dashboard');
-            } else {
-                setError('Invalid role');
-            }
+            // યુઝરને ડેશબોર્ડ પર રીડાયરેક્ટ કરો
+            navigate('/student/dashboard'); 
 
         } catch (err) {
-            console.error("Login failed:", err);
-            // Django API માંથી આવતી ભૂલનો મેસેજ દર્શાવો (જેમ કે 'Invalid Credentials')
-            setError(err.response?.data?.error || 'Login not success. Server Error.');
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userRole');
-        } finally {
-            setLoading(false);
+            console.error("Login Error:", err);
+            // 401 Unauthorized ભૂલોને હેન્ડલ કરવા
+            if (err.response && err.response.status === 401) {
+                setError("Wrong username and password.");
+            } else {
+                setError("login error,chek the server.");
+            }
         }
     };
 
     return (
-        <div className="login-container">
-            <form className="login-form" onSubmit={handleSubmit}>
-                <h2>Welcome to Quiz Portal</h2>
+        <div style={{ padding: '40px', maxWidth: '400px', margin: '50px auto', border: '1px solid #ccc', borderRadius: '8px' }}>
+            <h2>🔐 Login</h2>
+            <form onSubmit={handleSubmit}>
+                {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
                 
-                {error && <p className="error-message">{error}</p>}
-                
-                <div className="form-group">
-                    <label htmlFor="username">Username</label>
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        value={credentials.username}
-                        onChange={handleChange}
-                        required
-                        disabled={loading}
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Username:</label>
+                    <input 
+                        type="text" 
+                        value={username} 
+                        onChange={(e) => setUsername(e.target.value)} 
+                        required 
+                        style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
                     />
                 </div>
                 
-                <div className="form-group">
-                    <label htmlFor="password">Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        value={credentials.password}
-                        onChange={handleChange}
-                        required
-                        disabled={loading}
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
+                    <input 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        required 
+                        style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
                     />
                 </div>
                 
-                <button type="submit" disabled={loading} className="login-btn">
-                    {loading ? 'Login starting' : 'Login'}
+                <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+                    Login
                 </button>
             </form>
         </div>
     );
-};
+}
 
 export default Login;
