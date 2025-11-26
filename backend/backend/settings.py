@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'qms',        
     'login_app',
+    'rest_framework_simplejwt',      
 ]
 
 MIDDLEWARE = [
@@ -136,7 +137,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # --- CORS SETTINGS ---
 CORS_ALLOWED_ORIGINS = [
     # તમારા React/Vite Dev Server નો ડિફોલ્ટ પોર્ટ
-    "http://localhost:5173", 
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175", 
 ]
 
 # જો તમે production માં ડિપ્લોય કરો, તો CORS_ALLOW_ALL_ORIGINS = True વાપરવાનું ટાળો
@@ -151,4 +154,51 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny', # શરૂઆતમાં બધાને પરવાનગી આપો
     )
+}
+# backend/settings.py (સૌથી નીચે ઉમેરો)
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        # આને પછીથી કન્ફિગર કરીશું, અત્યારે ફક્ત ઓથેન્ટિકેશન ચેક કરવા માટે
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    )
+}
+
+# Simple JWT માટેનું કન્ફિગરેશન (વૈકલ્પિક, પરંતુ ભલામણ કરેલ)
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # 1 કલાક
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # 7 દિવસ
+    'ROTATE_REFRESH_TOKENS': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': 'તમારી ખૂબ જ ગુપ્ત કી અહીં બદલો', # આ કીને તમારી SECRET_KEY માંથી વાપરી શકાય છે
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+# backend/settings.py (સૌથી નીચે, બંને ડિક્શનરી ભેગી કરીને રાખો)
+
+# --- REST FRAMEWORK SETTINGS ---
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # JWT Token દ્વારા ઓથેન્ટિકેશન માટે આ ઉમેરો
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny', # શરૂઆતમાં બધાને પરવાનગી આપો
+    )
+}
+
+# Simple JWT માટેનું કન્ફિગરેશન
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     
+    'ROTATE_REFRESH_TOKENS': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY, # SECRET_KEY નો ઉપયોગ કરો
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }

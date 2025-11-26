@@ -47,13 +47,13 @@ const Login = () => {
             } else if (role === 'student') {
                 navigate('/student/dashboard');
             } else {
-                setError('અમાન્ય ભૂમિકા (Invalid role).');
+                setError('Invalid role');
             }
 
         } catch (err) {
             console.error("Login failed:", err);
             // Django API માંથી આવતી ભૂલનો મેસેજ દર્શાવો (જેમ કે 'Invalid Credentials')
-            setError(err.response?.data?.error || 'લોગિન નિષ્ફળ. સર્વર ભૂલ.');
+            setError(err.response?.data?.error || 'Login not success. Server Error.');
             localStorage.removeItem('authToken');
             localStorage.removeItem('userRole');
         } finally {
@@ -64,12 +64,12 @@ const Login = () => {
     return (
         <div className="login-container">
             <form className="login-form" onSubmit={handleSubmit}>
-                <h2>Quiz Portal માં સ્વાગત છે</h2>
+                <h2>Welcome to Quiz Portal</h2>
                 
                 {error && <p className="error-message">{error}</p>}
                 
                 <div className="form-group">
-                    <label htmlFor="username">યુઝરનેમ</label>
+                    <label htmlFor="username">Username</label>
                     <input
                         type="text"
                         id="username"
@@ -82,7 +82,7 @@ const Login = () => {
                 </div>
                 
                 <div className="form-group">
-                    <label htmlFor="password">પાસવર્ડ</label>
+                    <label htmlFor="password">Password</label>
                     <input
                         type="password"
                         id="password"
@@ -95,7 +95,7 @@ const Login = () => {
                 </div>
                 
                 <button type="submit" disabled={loading} className="login-btn">
-                    {loading ? 'લોગિન થઈ રહ્યું છે...' : 'લોગિન'}
+                    {loading ? 'Login starting' : 'Login'}
                 </button>
             </form>
         </div>
