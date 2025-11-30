@@ -15,16 +15,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+"""
+URL configuration for backend project.
+"""
+
+# 💡 સુધારો: 'include' ને માત્ર એક જ વાર આયાત કરો
 from django.contrib import admin
-from django.urls import path
-from django.urls import include
+from django.urls import path, include 
+# 'include' અહીંયા જ આયાત થઈ ગયું છે, તેથી નીચેની લાઇન બિનજરૂરી છે:
+# from django.urls import include 
 
 urlpatterns = [
+    # Django Admin Interface
     path('admin/', admin.site.urls),
     
-    # 1. Login અને User મેનેજમેન્ટ માટેનો પાથ
-    path('api/auth/', include('login_app.urls')), 
+    # 🔑 Djoser/JWT Authentication URLs: Registration, Login, User Details, etc.
+    # Djoser URLs (Registration, Activation, Password Reset)
+    path('api/auth/', include('djoser.urls')),
+    # JWT Token URLs (Login/Create Token, Refresh Token)
+    path('api/auth/', include('djoser.urls.jwt')), 
     
-    # 2. ક્વિઝ મેનેજમેન્ટ સિસ્ટમ માટેનો પાથ
+    # 📝 Quiz Management System URLs
     path('api/qms/', include('qms.urls')),
 ]

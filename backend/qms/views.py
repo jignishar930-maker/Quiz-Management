@@ -7,52 +7,52 @@ from .serializers import (
     QuizSerializer, 
     QuestionSerializer, 
     ResultSerializer,
-    # Add other serializers if you have them, e.g., OptionSerializer
 )
 
 # --- 1. ViewSets for CRUD Operations ---
 
-# Quiz ViewSet: Allows anyone to view, but only logged-in users to create/edit
 class QuizViewSet(viewsets.ModelViewSet):
+    """
+    Allows viewing, creating, updating, and deleting Quizzes.
+    Read-only access for anyone; Write access only for authenticated users.
+    """
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly] # Corrected Indentation
     
-    # Permission: Allows reading (GET) for everyone, but writing for authenticated users only.
-    permission_classes = [IsAuthenticatedOrReadOnly] 
-    
-    # Automatically set the user who creates the quiz
     def perform_create(self, serializer):
-        # We assume the 'created_by' field in the Quiz model is linked to User
+        # Automatically set the user who creates the quiz
         serializer.save(created_by=self.request.user)
 
-
-# Question ViewSet: Allowing everyone to view questions is usually fine for a quiz app
 class QuestionViewSet(viewsets.ModelViewSet):
+    """
+    Allows full access (CRUD) to Questions.
+    """
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     permission_classes = [AllowAny] 
     
 
-# --- 2. Generic Views (You can keep these, but they are often optional) ---
+# --- 2. Generic Views for Custom Actions ---
 
 class AvailableQuizzesView(generics.ListAPIView):
+    """
+    Lists all available Quizzes.
+    """
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
     permission_classes = [AllowAny]
 
 class SubmitQuizView(generics.CreateAPIView):
-    # Permission: Submitting a quiz result usually requires the user to be logged in
-    serializer_class = ResultSerializer
+    """
+    Handles POST requests for quiz submission and result creation.
+    Requires the user to be authenticated.
+    """
+    serializer_class = ResultSerializer # Corrected Indentation
     permission_classes = [IsAuthenticated] 
     
-    # Logic to calculate and save the score would go here
+    # Note: You will need to add logic here to calculate the score 
+    # before saving the result object.
     # def perform_create(self, serializer):
-    #     # ... scoring logic ...
+    #     # scoring logic goes here
     #     serializer.save(user=self.request.user, score=calculated_score)
-
-    # Submit Quiz View: Handles POST request for quiz submission
-class SubmitQuizView(generics.CreateAPIView):
-    # આ ResultSerializer માં સ્કોરિંગ લોજિક છે
-    serializer_class = ResultSerializer
-    # ક્વિઝ સબમિટ કરવા માટે યુઝરનો લોગઇન હોવો જરૂરી છે
-    permission_classes = [IsAuthenticated]

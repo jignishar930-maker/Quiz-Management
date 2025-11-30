@@ -1,4 +1,3 @@
-// src/components/AddQuiz.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +22,6 @@ const AddQuiz = () => {
         navigate('/login');
     }
 
-    // Handler for quiz title and description
     const handleDetailChange = (e) => {
         setQuizDetails({
             ...quizDetails,
@@ -31,15 +29,11 @@ const AddQuiz = () => {
         });
     };
 
-    // To add a new question
     const addQuestion = () => {
         setQuestions([
             ...questions,
             { 
-                // Using current timestamp or a library like 'uuid' is better for key, 
-                // but for simplicity, we'll rely on the array index for now, 
-                // ensuring the JSX key is unique.
-                id: Date.now() + questions.length, // Temporary unique ID for question state
+                id: Date.now() + questions.length, 
                 text: '', 
                 marks: 1, 
                 options: [
@@ -50,21 +44,18 @@ const AddQuiz = () => {
         ]);
     };
 
-    // Handler for question text and marks
     const handleQuestionChange = (index, e) => {
         const newQuestions = [...questions];
         newQuestions[index][e.target.name] = e.target.value;
         setQuestions(newQuestions);
     };
 
-    // Handler for option text and is_correct
     const handleOptionChange = (qIndex, oIndex, e) => {
         const newQuestions = [...questions];
         
         if (e.target.name === 'text') {
             newQuestions[qIndex].options[oIndex].text = e.target.value;
         } else if (e.target.name === 'is_correct') {
-            // Ensure only one option is correct for a question
             newQuestions[qIndex].options.forEach((opt, idx) => {
                 opt.is_correct = (idx === oIndex);
             });
@@ -72,34 +63,31 @@ const AddQuiz = () => {
         setQuestions(newQuestions);
     };
     
-    // To add a new option
     const addOption = (qIndex) => {
         const newQuestions = [...questions];
         newQuestions[qIndex].options.push({ text: '', is_correct: false });
         setQuestions(newQuestions);
     };
 
-    // To submit the form
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
         setMessage('');
 
-        // Prepare data structure to match Backend's Nested Serializer
         const finalData = {
             title: quizDetails.title,
             description: quizDetails.description,
             questions: questions.map(q => ({
                 text: q.text,
                 marks: parseInt(q.marks),
-                options: q.options.filter(o => o.text.trim() !== '') // Remove empty options
+                options: q.options.filter(o => o.text.trim() !== '') 
             }))
         };
         
         try {
             const response = await axios.post(
-                `${API_BASE_URL}/api/quizzes/`, // QuizViewSet URL
+                `${API_BASE_URL}/api/quizzes/`,
                 finalData,
                 {
                     headers: {
@@ -109,7 +97,6 @@ const AddQuiz = () => {
                 }
             );
             setMessage(`Quiz "${response.data.title}" created successfully.`);
-            // Reset form
             setQuizDetails({ title: '', description: '' });
             setQuestions([]);
 

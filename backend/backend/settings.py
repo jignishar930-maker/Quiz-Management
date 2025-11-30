@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'djoser',
     'corsheaders',
     'qms',        
     'login_app',
@@ -163,8 +164,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         # આને પછીથી કન્ફિગર કરીશું, અત્યારે ફક્ત ઓથેન્ટિકેશન ચેક કરવા માટે
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    )
+        'rest_framework.permissions.IsAuthenticated',    )
 }
 
 # Simple JWT માટેનું કન્ફિગરેશન (વૈકલ્પિક, પરંતુ ભલામણ કરેલ)
@@ -201,4 +201,15 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY, # SECRET_KEY નો ઉપયોગ કરો
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+DJOSER = {
+    'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': '#/activate/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': False, # True કરો જો તમારે ઇમેઇલ વેરિફિકેશન જોઈતું હોય
+    'SERIALIZERS': {},
+    'PERMISSIONS': {
+        'user_create': ['rest_framework.permissions.AllowAny'], # રજીસ્ટ્રેશન માટે
+        'user': ['rest_framework.permissions.IsAuthenticated'], # યુઝર ડેટા જોવા માટે
+    }
 }

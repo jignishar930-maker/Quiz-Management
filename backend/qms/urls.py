@@ -1,16 +1,17 @@
 from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from .views import QuizViewSet, QuestionViewSet, SubmitQuizView # 👈 SubmitQuizView Import કરો
-# .views માંથી જરૂરી ViewSets ને import કરો
-from .views import QuizViewSet, QuestionViewSet 
+from .views import QuizViewSet, QuestionViewSet, SubmitQuizView # 👈 ગુજરાતી ટિપ્પણી દૂર કરી
 
-# DefaultRouter નો ઉપયોગ કરીને ViewSets માટે URLS બનાવો
+# 1. Router setup (Only needed once)
 router = DefaultRouter()
-router.register(r'quizzes', QuizViewSet)
-router.register(r'questions', QuestionViewSet) # 👈 આ ઉમેરો
+router.register(r'quizzes', QuizViewSet, basename='quiz')
+router.register(r'questions', QuestionViewSet, basename='question')
 
+# 2. URL Patterns
 urlpatterns = [
-    # બધા ViewSets ના URLs અહીં સમાવિષ્ટ થશે
-    path('', include(router.urls)),
+    # Router URLs (e.g., /api/qms/quizzes/, /api/qms/questions/)
+    path('', include(router.urls)), 
+    
+    # Custom View URLs (e.g., /api/qms/submit-quiz/)
     path('submit-quiz/', SubmitQuizView.as_view(), name='submit-quiz'),
 ]

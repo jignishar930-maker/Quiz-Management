@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-// JWT ટોકન મેળવવાનો URL (જે તમે હમણાં જ સેટ કર્યો છે)
-const LOGIN_URL = 'http://127.0.0.1:8000/api/auth/token/'; 
+const LOGIN_URL = 'http://127.0.0.1:8000/api/auth/jwt/create/'; 
 
 function Login() {
     const [username, setUsername] = useState('');
@@ -16,26 +15,21 @@ function Login() {
         setError(null);
 
         try {
-            // API ને POST વિનંતી મોકલો
             const response = await axios.post(LOGIN_URL, {
-                username,
-                password,
+                username: username,
+                password: password,
             });
 
-            // ઍક્સેસ અને રિફ્રેશ ટોકન્સ સ્ટોર કરો 
-            // આ ટોકન્સનો ઉપયોગ હવે પછીના સુરક્ષિત API કૉલ્સમાં થશે
             localStorage.setItem('access_token', response.data.access);
             localStorage.setItem('refresh_token', response.data.refresh);
             
-            alert("Successfuiiy login! Start the stoken.");
+            alert("Successfuiiy login! store the stoken.");
 
-            // યુઝરને ડેશબોર્ડ પર રીડાયરેક્ટ કરો
             navigate('/student/dashboard'); 
 
         } catch (err) {
             console.error("Login Error:", err);
-            // 401 Unauthorized ભૂલોને હેન્ડલ કરવા
-            if (err.response && err.response.status === 401) {
+           if (err.response && err.response.status === 401) {
                 setError("Wrong username and password.");
             } else {
                 setError("login error,chek the server.");

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+// અહીંયા તમે કસ્ટમ axios ઇન્સ્ટન્સ 'api' ઇમ્પોર્ટ કર્યો છે
+import api from '../api'; 
 
-// Main URL for the Django API
-const BASE_URL = 'http://127.0.0.1:8000/api/qms'; 
+// BASE_URL હવે api.js માં સેટ થયેલ હોવાથી, તમે તેને ટૂંકાવી શકો છો
+// જો કે, સ્પષ્ટતા માટે તેને રાખવું હોય તો રાખી શકાય.
+// const BASE_URL = 'http://127.0.0.1:8000/api/qms'; // જરૂર નથી
 
 function QuizList() {
     const [quizzes, setQuizzes] = useState([]);
@@ -10,37 +12,31 @@ function QuizList() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // 1. Get the JWT token from local storage
-        const token = localStorage.getItem('access_token'); 
-
-        // 2. Define headers to send the token
-        const config = {
-            headers: {
-                // Check if the token exists, and if so, add the Authorization header
-                ...(token && { Authorization: `Bearer ${token}` }) 
-            }
-        };
-
-        // Send GET request to fetch quiz data
-        axios.get(`${BASE_URL}/quizzes/`, config)
+        // GET વિનંતી મોકલો. api.js ઓટોમેટીકલી ટોકન અને baseURL ઉમેરશે.
+        // જો baseURL api.js માં 'http://127.0.0.1:8000' સેટ કરેલ હોય, તો:
+        api.get('/api/qms/quizzes/') 
             .then(response => {
+                // DRFનું ModelViewSet ક્યારેક 'results' માં ડેટા આપે છે
                 setQuizzes(response.data.results || response.data); 
                 setLoading(false);
             })
             .catch(err => {
                 console.error("API Call Error:", err);
-                // Handle 401 errors, which means the token is missing or expired
+                
+                // 401 ભૂલનું હેન્ડલિંગ
                 if (err.response && err.response.status === 401) {
-                    setError("Unauthorized access. Please log in to view this list.");
+                    // જો 401 આવે, તો યુઝરને લૉગિન પેજ પર રીડાયરેક્ટ કરવું જોઈએ.
+                    setError("not access.Pleace login now.");
+                    // navigate('/login'); // જો તમે Router નો ઉપયોગ કરતા હોવ
                 } else {
-                    setError("Error fetching quizzes. Check if backend is running.");
+                    setError("quiz find error. chek the server.");
                 }
                 setLoading(false);
             });
     }, []);
 
     if (loading) {
-        return <div>Loading Quizzes...</div>;
+        return <div>Loading the quiz...</div>;
     }
 
     if (error) {
@@ -49,9 +45,9 @@ function QuizList() {
 
     return (
         <div style={{ padding: '20px' }}>
-            <h2>📝 Available Quizzes</h2>
+            <h2>📝 Uvailable quiz</h2>
             {quizzes.length === 0 ? (
-                <p>No quizzes found. Please add a quiz via the Django Admin page.</p>
+                <p>Not found the quiz.</p>
             ) : (
                 <ul>
                     {quizzes.map(quiz => (
