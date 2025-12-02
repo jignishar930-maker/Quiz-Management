@@ -2,11 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class UserProfile(models.Model):
-    # અહીં 'related_name' અલગ હોવો જોઈએ, દા.ત. 'login_profile'
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='login_profile') 
-    
-    # ... login_app ને સંબંધિત અન્ય ફિલ્ડ્સ
-    # દા.ત.: phone_number = models.CharField(max_length=15, blank=True)
+    """
+    યુઝરના રોલ (role) જેવી વધારાની માહિતી સ્ટોર કરવા માટે મોડેલ.
+    """
+    USER_ROLES = [
+        ('student', 'Student'),
+        ('teacher', 'Teacher'),
+    ]
 
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # ડિફોલ્ટ રોલ 'student' સેટ કરીએ છીએ
+    role = models.CharField(max_length=10, choices=USER_ROLES, default='student')
+    
     def __str__(self):
-        return self.user.username
+        return f"{self.user.username} - {self.role}"

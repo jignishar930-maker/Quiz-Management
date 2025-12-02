@@ -1,23 +1,86 @@
-# qms/serializers.py (Recommended structure)
 from rest_framework import serializers
-from .models import Quiz, Question, Result # Make sure you import all models
+from .models import Quiz, Question, Option, Result
+from django.contrib.auth import get_user_model
 
-# 1. Quiz Serializer (Assuming this one is already correct)
-class QuizSerializer(serializers.ModelSerializer):
+# Get the custom user model (e.g., if you are using CustomUser)
+CustomUser = get_user_model()
+
+
+# ==========================================================
+# BASE SERIALIZERS (Usually for Admin/Management Views)
+# ==========================================================
+
+# --- User Serializer ---
+class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Quiz
-        fields = '__all__'
+        model = CustomUser
+        fields = ('id', 'email', 'username')
 
-# 2. Question Serializer (The missing one)
+# --- Option Serializer (Full Details) ---
+class OptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Option
+        # Includes 'is_correct' - for admin/post-result views
+        fields = ['id', 'text', 'is_correct']
+
+# --- Question Serializer (Full Details) ---
 class QuestionSerializer(serializers.ModelSerializer):
+    options = OptionSerializer(many=True, read_only=True)
+
     class Meta:
         model = Question
-        # Include necessary fields, e.g., 'quiz', 'text', 'question_type'
-        fields = '__all__' 
+        fields = ['id', 'quiz', 'text', 'options', 'type']
 
-# 3. Result Serializer (You are also importing this one)
+# --- Quiz Serializer (List/Detail without Questions) ---
+class QuizSerializer(serializers.ModelSerializer):
+    questions_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Quiz
+        fields = ['id', 'title', 'description', 'duration', 'questions_count']
+
+    def get_questions_count(self, obj):
+        # Assumes the related name on the Quiz model for questions is 'questions'
+        return obj.questions.count()
+
+# --- Result Serializer ---
 class ResultSerializer(serializers.ModelSerializer):
+    quiz_title = serializers.ReadOnlyField(source='quiz.title')
+    user_username = serializers.ReadOnlyField(source='user.username')
+
     class Meta:
         model = Result
-        # Include fields like 'user', 'quiz', 'score', 'date_taken'
-        fields = '__all__'
+        fields = ['id', 'user', 'user_username', 'quiz', 'quiz_title', 'score', 'percentage', 'created_at']
+
+
+# ==========================================================
+# QUIZ ATTEMPT SERIALIZERS (Hiding the correct answer)
+# ==========================================================
+
+# 1. Option Serializer for Quiz Attempt (NO 'is_correct' field)
+class QuizOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Option
+        # SECURITY NOTE: We explicitly exclude 'is_correct' here to prevent cheating.
+        fields = ['id', 'text']
+
+# 2. Question Serializer for Quiz Attempt (Uses QuizOptionSerializer)
+class QuizQuestionSerializer(serializers.ModelSerializer):
+    # Use the new QuizOptionSerializer
+    options = QuizOptionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        # Fields necessary for the user to attempt the question.
+        fields = ['id', 'text', 'options']
+
+# 3. Quiz Serializer for Quiz Attempt (Includes the full questions list)
+class QuizAttemptSerializer(serializers.ModelSerializer):
+    # Use the new QuizQuestionSerializer to nest the questions
+    questions = QuizQuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Quiz
+        # This serializer includes the full list of questions (without answers)
+        # for a user to attempt the quiz.
+        fields = ['id', 'title', 'description', 'duration', 'questions']

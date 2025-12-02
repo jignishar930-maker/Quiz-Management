@@ -1,17 +1,34 @@
-from rest_framework.routers import DefaultRouter
 from django.urls import path, include
-from .views import QuizViewSet, QuestionViewSet, SubmitQuizView # 👈 ગુજરાતી ટિપ્પણી દૂર કરી
+from rest_framework.routers import DefaultRouter
+from .views import (
+    QuizViewSet, QuestionViewSet, OptionViewSet, ResultViewSet,
+    QuizQuestionListView, QuizSubmissionView, UserResultsView
+)
 
-# 1. Router setup (Only needed once)
 router = DefaultRouter()
-router.register(r'quizzes', QuizViewSet, basename='quiz')
-router.register(r'questions', QuestionViewSet, basename='question')
+router.register(r'quizzes', QuizViewSet)
+router.register(r'questions', QuestionViewSet)
+router.register(r'options', OptionViewSet)
+router.register(r'results_admin', ResultViewSet) # Admin view for all results
 
-# 2. URL Patterns
 urlpatterns = [
-    # Router URLs (e.g., /api/qms/quizzes/, /api/qms/questions/)
-    path('', include(router.urls)), 
+    # Router URLs (for basic CRUD and Admin views)
+    path('', include(router.urls)),
+
+    # --- New Functional URLs ---
     
-    # Custom View URLs (e.g., /api/qms/submit-quiz/)
-    path('submit-quiz/', SubmitQuizView.as_view(), name='submit-quiz'),
+    # 1. API to get questions for a quiz attempt
+    path('quiz/<int:quiz_id>/questions/', 
+         QuizQuestionListView.as_view(), 
+         name='quiz-questions-list'),
+
+    # 2. API to submit answers and get score
+    path('quiz/submit/', 
+         QuizSubmissionView.as_view(), 
+         name='quiz-submit'),
+         
+    # 3. API to get results for the current user
+    path('user/results/', 
+         UserResultsView.as_view(), 
+         name='user-results'),
 ]

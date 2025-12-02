@@ -21,20 +21,20 @@ URL configuration for backend project.
 
 # 💡 સુધારો: 'include' ને માત્ર એક જ વાર આયાત કરો
 from django.contrib import admin
-from django.urls import path, include 
-# 'include' અહીંયા જ આયાત થઈ ગયું છે, તેથી નીચેની લાઇન બિનજરૂરી છે:
-# from django.urls import include 
+from django.urls import path, include
+from login_app.views import index_view # NEW: index_view ને import કરો
 
 urlpatterns = [
-    # Django Admin Interface
+    # NEW: રુટ URL (/) ને login_app ના index_view સાથે જોડો
+    path('', index_view, name='home'),
+    
     path('admin/', admin.site.urls),
     
-    # 🔑 Djoser/JWT Authentication URLs: Registration, Login, User Details, etc.
-    # Djoser URLs (Registration, Activation, Password Reset)
-    path('api/auth/', include('djoser.urls')),
-    # JWT Token URLs (Login/Create Token, Refresh Token)
-    path('api/auth/', include('djoser.urls.jwt')), 
-    
-    # 📝 Quiz Management System URLs
+    # Auth URLs (Provided by Simple JWT/DRF Auth, if you set them up)
+    # Note: These paths should match whatever you are using in your project setup
+    path('api/auth/', include('rest_framework.urls')), # For browsable API login/logout
+    path('api/auth/', include('login_app.urls')), # For registration, token management etc.
+
+    # Quiz Management System URLs
     path('api/qms/', include('qms.urls')),
 ]
