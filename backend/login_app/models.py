@@ -1,18 +1,30 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import User
 
-class UserProfile(models.Model):
-    """
-    યુઝરના રોલ (role) જેવી વધારાની માહિતી સ્ટોર કરવા માટે મોડેલ.
-    """
-    USER_ROLES = [
+class User(AbstractUser):
+    # રોલ માટે ચોઈસ
+    ROLE_CHOICES = (
         ('student', 'Student'),
         ('teacher', 'Teacher'),
-    ]
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # ડિફોલ્ટ રોલ 'student' સેટ કરીએ છીએ
-    role = models.CharField(max_length=10, choices=USER_ROLES, default='student')
+    )
     
+    # રોલ ફીલ્ડ ઉમેરો, ડિફોલ્ટ રોલ 'student' સેટ કરો
+    role = models.CharField(
+        max_length=10, 
+        choices=ROLE_CHOICES, 
+        default='student',
+        verbose_name='User Role'
+    )
+    
+    # યુઝર મોડેલને રિક્વાયરમેન્ટ મુજબ એડિટ કરો (અહીં માત્ર role ઉમેર્યો છે)
+    # email = models.EmailField(unique=True)
+    # USERNAME_FIELD = 'email'
+    # REQUIRED_FIELDS = ['username']
+
     def __str__(self):
-        return f"{self.user.username} - {self.role}"
+        return self.username
+
+    class Meta:
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+

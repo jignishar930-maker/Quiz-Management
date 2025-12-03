@@ -141,10 +141,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_CREDENTIALS = True 
 
 # --- REST FRAMEWORK SETTINGS ---
 REST_FRAMEWORK = {
@@ -164,7 +164,10 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         # આને પછીથી કન્ફિગર કરીશું, અત્યારે ફક્ત ઓથેન્ટિકેશન ચેક કરવા માટે
-        'rest_framework.permissions.IsAuthenticated',    )
+        'rest_framework.permissions.IsAuthenticated',    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    )
 }
 
 # Simple JWT માટેનું કન્ફિગરેશન (વૈકલ્પિક, પરંતુ ભલામણ કરેલ)
@@ -213,3 +216,4 @@ DJOSER = {
         'user': ['rest_framework.permissions.IsAuthenticated'], # યુઝર ડેટા જોવા માટે
     }
 }
+AUTH_USER_MODEL = 'login_app.User' # <-- આ ઉમેરો

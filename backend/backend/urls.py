@@ -22,7 +22,7 @@ URL configuration for backend project.
 # 💡 સુધારો: 'include' ને માત્ર એક જ વાર આયાત કરો
 from django.contrib import admin
 from django.urls import path, include
-from login_app.views import index_view # NEW: index_view ને import કરો
+from login_app.views import index_view
 
 urlpatterns = [
     # NEW: રુટ URL (/) ને login_app ના index_view સાથે જોડો

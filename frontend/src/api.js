@@ -1,10 +1,8 @@
 import axios from 'axios';
 
-// બેકએન્ડ API બેઝ URL
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
-// 1. Axios ઇન્સ્ટન્સ બનાવો જે દરેક રિક્વેસ્ટમાં JWT Access Token મોકલશે
-// આ ઇન્સ્ટન્સનો ઉપયોગ ફક્ત authenticated calls માટે કરવામાં આવશે.
+// 1. Axios Instance (for authenticated calls)
 export const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -12,19 +10,11 @@ export const axiosInstance = axios.create({
     },
 });
 
-// 2. Token Refresh Logic (ઇન્ટરસેપ્ટર)
-// જો Access Token Expire થઈ જાય, તો Refresh Token નો ઉપયોગ કરીને નવું Token મેળવવાનો પ્રયાસ કરો.
 axiosInstance.interceptors.request.use(async req => {
     const accessToken = localStorage.getItem('access_token');
-    
-    // જો Access Token હાજર હોય, તો તેને Header માં ઉમેરો
     if (accessToken) {
         req.headers.Authorization = `Bearer ${accessToken}`;
     }
-    
-    // અહીં Token Expiration Check માટેનું જટિલ લોજિક ઉમેરી શકાય છે,
-    // પરંતુ સરળતા માટે, આપણે ફક્ત 401 (Unauthorized) Error ને હેન્ડલ કરીશું.
-    
     return req;
 }, error => {
     return Promise.reject(error);
@@ -33,15 +23,14 @@ axiosInstance.interceptors.request.use(async req => {
 
 // --- AUTHENTICATION FUNCTIONS ---
 
-// 3. User Login Function
 export const loginUser = async (username, password) => {
     try {
+        // અહીં Simple JWT નું /auth/token/ એન્ડપોઇન્ટ નહીં, પણ તમારા કસ્ટમ LoginView નો ઉપયોગ થાય છે:
         const response = await axios.post(`${API_BASE_URL}/auth/token/`, { 
             username, 
             password 
         });
 
-        // Login સફળ થયા પછી Tokens અને User Details સ્ટોર કરો
         const { access, refresh, role, user_id } = response.data;
         
         localStorage.setItem('access_token', access);
@@ -49,40 +38,35 @@ export const loginUser = async (username, password) => {
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_id', user_id);
 
-        return { role, user_id }; // UI અપડેટ કરવા માટે રોલ પાછો મોકલો
+        return { role, user_id }; 
 
     } catch (error) {
         if (error.response && error.response.status === 401) {
-            throw new Error(error.response.data.error || 'Invalid credentials.');
+            throw new Error(error.response.data.error || 'અમાન્ય ઓળખપત્રો.');
         }
-        throw new Error('Login failed. Server error.');
+        throw new Error('લૉગિન નિષ્ફળ. સર્વર ભૂલ.');
     }
 };
 
-// 4. User Registration Function
 export const registerUser = async (username, password, email, role) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/register/`, {
             username,
             password,
             email,
-            role // 'student' અથવા 'teacher'
+            role 
         });
-        return response.data; // સફળતાનો સંદેશ
+        return response.data; 
     } catch (error) {
-        // Validation Errors (જેમ કે યુઝરનેમ પહેલેથી જ અસ્તિત્વમાં છે)
         if (error.response && error.response.data) {
-            // DRF Validation Errors ને સરળ સ્ટ્રિંગમાં કન્વર્ટ કરો
             const errorMsg = Object.values(error.response.data).flat().join(' ');
-            throw new Error(errorMsg || 'Registration failed.');
+            throw new Error(errorMsg || 'નોંધણી નિષ્ફળ.');
         }
-        throw new Error('Registration failed. Server error.');
+        throw new Error('નોંધણી નિષ્ફળ. સર્વર ભૂલ.');
     }
 };
 
-// 5. User Logout Function
 export const logoutUser = () => {
-    // Local storage માંથી બધી Authentication માહિતી દૂર કરો
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_role');
@@ -92,30 +76,41 @@ export const logoutUser = () => {
 
 // --- QUIZ MANAGEMENT FUNCTIONS (Example) ---
 
-// 6. Fetch Available Quizzes (બધા માટે, રોલની પરવા કર્યા વિના)
 export const fetchAvailableQuizzes = async () => {
     try {
-        // અહીં આપણે axiosInstance નો ઉપયોગ કરીશું, કારણ કે આમાં authorization header ઉમેરાય છે,
-        // ભલે આપણે backend views.py માં AllowAny સેટ કર્યું હોય.
+        // Authenticated call
         const response = await axiosInstance.get('/qms/quizzes/');
         return response.data;
     } catch (error) {
         console.error("Error fetching quizzes:", error);
-        // જો 401 હોય, તો યુઝરને લૉગિન કરવા માટે કહો.
-        throw new Error('Failed to fetch quizzes. Please check server or login status.');
+        throw new Error('ક્વિઝ લાવવામાં નિષ્ફળ.');
     }
 };
 
-// 7. Teacher માટે નવો Quiz બનાવવા માટેનું ફંક્શન
-export const createQuiz = async (quizData) => {
+export const fetchQuizDetail = async (quizId) => {
     try {
-        // આ એક authenticated call છે, તેથી axiosInstance નો ઉપયોગ કરો
-        const response = await axiosInstance.post('/qms/quizzes/', quizData);
+        const response = await axiosInstance.get(`/qms/quizzes/${quizId}/`);
         return response.data;
     } catch (error) {
-        if (error.response && error.response.status === 403) {
-             throw new Error("You do not have permission to create a quiz (Teacher role required).");
-        }
-        throw new Error('Failed to create quiz.');
+         throw new Error('ક્વિઝ વિગતો લાવવામાં નિષ્ફળ.');
+    }
+};
+
+export const submitQuizAttempt = async (quizId, answers) => {
+    try {
+        // answers: [{ question: id, selected_option: id }, ...]
+        const response = await axiosInstance.post(`/qms/quizzes/${quizId}/submit/`, { answers });
+        return response.data; // should return result_id, score, etc.
+    } catch (error) {
+        throw new Error('ક્વિઝ સબમિટ કરવામાં નિષ્ફળ.');
+    }
+};
+
+export const fetchResultDetail = async (resultId) => {
+     try {
+        const response = await axiosInstance.get(`/qms/results/${resultId}/`);
+        return response.data;
+    } catch (error) {
+        throw new Error('પરિણામની વિગતો લાવવામાં નિષ્ફળ.');
     }
 };
