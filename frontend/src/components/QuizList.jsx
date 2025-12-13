@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// અહીંયા તમે કસ્ટમ axios ઇન્સ્ટન્સ 'api' ઇમ્પોર્ટ કર્યો છે
-import api from '../api'; 
+import { fetchAvailableQuizzes } from '../api';
 
 // BASE_URL હવે api.js માં સેટ થયેલ હોવાથી, તમે તેને ટૂંકાવી શકો છો
 // જો કે, સ્પષ્ટતા માટે તેને રાખવું હોય તો રાખી શકાય.
@@ -14,7 +13,7 @@ function QuizList() {
     useEffect(() => {
         // GET વિનંતી મોકલો. api.js ઓટોમેટીકલી ટોકન અને baseURL ઉમેરશે.
         // જો baseURL api.js માં 'http://127.0.0.1:8000' સેટ કરેલ હોય, તો:
-        api.get('/api/qms/quizzes/') 
+        fetchAvailableQuizzes('/api/qms/quizzes/') 
             .then(response => {
                 // DRFનું ModelViewSet ક્યારેક 'results' માં ડેટા આપે છે
                 setQuizzes(response.data.results || response.data); 

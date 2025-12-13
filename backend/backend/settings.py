@@ -216,4 +216,4 @@ DJOSER = {
         'user': ['rest_framework.permissions.IsAuthenticated'], # યુઝર ડેટા જોવા માટે
     }
 }
-AUTH_USER_MODEL = 'login_app.User' # <-- આ ઉમેરો
+AUTH_USER_MODEL = 'login_app.User'

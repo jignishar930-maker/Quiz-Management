@@ -4,7 +4,7 @@ from rest_framework import status, generics, permissions
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import UserProfile # UserProfile મોડેલ અહીં ઇમ્પોર્ટ થવું જરૂરી છે
+from .models import User # UserProfile મોડેલ અહીં ઇમ્પોર્ટ થવું જરૂરી છે
 from .serializers import RegisterSerializer
 from django.shortcuts import render
 
@@ -64,7 +64,7 @@ class LoginView(APIView):
             }, status=status.HTTP_200_OK)
         else:
             # અમાન્ય ઓળખપત્રો (Invalid Credentials)
-            return Response({'error': 'અમાન્ય યુઝરનેમ અથવા પાસવર્ડ'}, 
+            return Response({'error': 'wrong username and  password'}, 
                             status=status.HTTP_401_UNAUTHORIZED)
 
 
@@ -90,5 +90,5 @@ class RegisterView(generics.CreateAPIView):
 
         return Response({
             "user": serializer.data,
-            "message": "નોંધણી સફળ! કૃપા કરીને લોગિન કરો.",
+            "message": "success ! please login now.",
         }, status=status.HTTP_201_CREATED)
