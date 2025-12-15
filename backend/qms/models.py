@@ -1,10 +1,26 @@
+# qms/models.py
+
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings # settings.AUTH_USER_MODEL માટે જરૂરી છે
+
+# -----------------
+# CORE QUIZ MODELS
+# -----------------
 
 class Quiz(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    total_questions = models.IntegerField(default=0)
+    passing_score = models.IntegerField(default=0) # ટકાવારીમાં અથવા સ્કોરમાં
+    
+
+    # settings.AUTH_USER_MODEL નો ઉપયોગ અને ક્લેશ ટાળવા માટે unique related_name
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        related_name='created_quizzes' # ✅ related_name સુધારો
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -25,15 +41,30 @@ class Option(models.Model):
     def __str__(self):
         return self.text
 
+# -----------------
+# RESULT MODELS
+# -----------------
+
 class Result(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE) 
+    # settings.AUTH_USER_MODEL નો ઉપયોગ અને ક્લેશ ટાળવા માટે unique related_name
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        related_name='quiz_results' # ✅ related_name સુધારો
+    ) 
+    
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     score = models.IntegerField(default=0)
     total_questions = models.IntegerField()
     completed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.user.username} - {self.quiz.title} - Score: {self.score}'
+        # ખાતરી કરો કે self.user.username ઉપલબ્ધ છે
+        try:
+            username = self.user.username
+        except:
+            username = "Deleted User"
+        return f'{username} - {self.quiz.title} - Score: {self.score}'
 
 class StudentAnswer(models.Model):
     result = models.ForeignKey(Result, related_name='student_answers', on_delete=models.CASCADE)
@@ -44,6 +75,10 @@ class StudentAnswer(models.Model):
     def __str__(self):
         return f'{self.result.user.username} answered {self.question.text[:20]}...'
 
+# -----------------
+# USER PROFILE (જો જરૂર હોય તો)
+# -----------------
+
 USER_TYPE_CHOICES = (
     ('student', 'Student'),
     ('teacher', 'Teacher'),
@@ -51,7 +86,13 @@ USER_TYPE_CHOICES = (
 
 class UserProfile(models.Model):
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='student')
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='qms_profile')
+    
+    # settings.AUTH_USER_MODEL નો ઉપયોગ અને ક્લેશ ટાળવા માટે unique related_name
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='qms_profile' # ✅ related_name સુધારો (જો અગાઉ ન હોય તો)
+    )
 
     def __str__(self):
         return self.user.username

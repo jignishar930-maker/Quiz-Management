@@ -25,25 +25,36 @@ axiosInstance.interceptors.request.use(async req => {
 
 export const loginUser = async (username, password) => {
     try {
-        // અહીં Simple JWT નું /auth/token/ એન્ડપોઇન્ટ નહીં, પણ તમારા કસ્ટમ LoginView નો ઉપયોગ થાય છે:
-        const response = await axios.post(`${API_BASE_URL}/auth/token/`, { 
+        // Simple JWT ટોકન મેળવવાનો સાચો એન્ડપોઇન્ટ
+        const response = await axios.post(`${API_BASE_URL}/token/`, { 
             username, 
             password 
         });
 
-        const { access, refresh, role, user_id } = response.data;
+        // 💡 Simple JWT માત્ર access અને refresh ટોકન્સ જ પાછા મોકલે છે.
+        const { access, refresh } = response.data;
         
+        // નોંધ: Simple JWT /token/ માં role કે user_id પાછું મોકલતું નથી. 
+        // તેથી, આપણે તેને અહીં હાર્ડકોડ (Hardcode) કરીએ છીએ (તમારા સેટઅપ મુજબ).
+        // જો યુઝર સુપરયુઝર હોય તો role 'admin' રાખો.
+        const role = (username === 'jigu') ? 'admin' : 'student'; 
+        const user_id = username; 
+
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
-        localStorage.setItem('user_role', role);
-        localStorage.setItem('user_id', user_id);
+        localStorage.setItem('user_role', role); 
+        localStorage.setItem('user_id', user_id); 
 
-        return { role, user_id }; 
+        // Login.jsx ને સફળતા જણાવવા માટે
+        return { success: true, role, user_id }; 
 
     } catch (error) {
+        // જો 401 Unauthorized ભૂલ આવે (ખોટો યુઝરનેમ/પાસવર્ડ), તો Login.jsx ને ભૂલ ફેંકો.
         if (error.response && error.response.status === 401) {
-            throw new Error(error.response.data.error || 'અમાન્ય ઓળખપત્રો.');
+             // 'detail' કી Simple JWT માં ડિફોલ્ટ છે.
+             throw new Error(error.response.data.detail || 'અમાન્ય ઓળખપત્રો.');
         }
+        // અન્ય કોઈ સર્વર ભૂલ (દા.ત. 500)
         throw new Error('લૉગિન નિષ્ફળ. સર્વર ભૂલ.');
     }
 };
@@ -59,10 +70,11 @@ export const registerUser = async (username, password, email, role) => {
         return response.data; 
     } catch (error) {
         if (error.response && error.response.data) {
+            // DRF ભૂલોને વાંચવાનો પ્રયાસ કરો
             const errorMsg = Object.values(error.response.data).flat().join(' ');
             throw new Error(errorMsg || 'નોંધણી નિષ્ફળ.');
         }
-        throw new Error('નોંધણી નિષ્ફળ. સર્વર ભૂલ.');
+        throw new Error('. Server mistake.');
     }
 };
 
@@ -92,7 +104,7 @@ export const fetchQuizDetail = async (quizId) => {
         const response = await axiosInstance.get(`/qms/quizzes/${quizId}/`);
         return response.data;
     } catch (error) {
-         throw new Error('ક્વિઝ વિગતો લાવવામાં નિષ્ફળ.');
+        throw new Error('ક્વિઝ વિગતો લાવવામાં નિષ્ફળ.');
     }
 };
 
@@ -107,7 +119,7 @@ export const submitQuizAttempt = async (quizId, answers) => {
 };
 
 export const fetchResultDetail = async (resultId) => {
-     try {
+    try {
         const response = await axiosInstance.get(`/qms/results/${resultId}/`);
         return response.data;
     } catch (error) {

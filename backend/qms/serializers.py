@@ -33,12 +33,14 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 # --- Quiz Serializer (List/Detail without Questions) ---
 class QuizSerializer(serializers.ModelSerializer):
+    # આ ફિલ્ડ ક્વિઝમાં કેટલા પ્રશ્નો છે તે ગણે છે
     questions_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
-        fields = ['id', 'title', 'description', 'duration', 'questions_count']
-
+        # ✅ સુધારો: 'duration' ફિલ્ડ દૂર કર્યું.
+        fields = ['id', 'title', 'description', 'total_questions', 'passing_score', 'created_at', 'questions_count']
+        
     def get_questions_count(self, obj):
         # Assumes the related name on the Quiz model for questions is 'questions'
         return obj.questions.count()
@@ -81,6 +83,12 @@ class QuizAttemptSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        # This serializer includes the full list of questions (without answers)
-        # for a user to attempt the quiz.
-        fields = ['id', 'title', 'description', 'duration', 'questions']
+        # ✅ સુધારો: 'duration' ફિલ્ડ અહીંથી પણ દૂર કર્યું.
+        fields = ['id', 'title', 'description', 'questions']
+
+# --- Answer Submission Serializer (for POST request) ---
+class AnswerSubmissionSerializer(serializers.Serializer):
+    question = serializers.IntegerField() # ID of the question
+    selected_option = serializers.IntegerField() # ID of the selected option
+    
+    # આનો ઉપયોગ QuizAttemptView માં સબમિશન ડેટાને વેલિડેટ કરવા માટે થાય છે.

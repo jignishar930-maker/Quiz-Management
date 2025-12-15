@@ -180,6 +180,9 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': 'તમારી ખૂબ જ ગુપ્ત કી અહીં બદલો', # આ કીને તમારી SECRET_KEY માંથી વાપરી શકાય છે
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    'USER_ID_FIELD': 'id', # અથવા 'username' જો id ન હોય
+    'USER_MODEL_INFO': 'login_app.User',
 }
 # backend/settings.py (સૌથી નીચે, બંને ડિક્શનરી ભેગી કરીને રાખો)
 

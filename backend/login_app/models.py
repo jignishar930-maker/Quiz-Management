@@ -1,8 +1,15 @@
+# login_app/models.py
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+# અહીં settings ઈમ્પોર્ટ કરવાની જરૂર નથી કારણ કે તે કસ્ટમ યુઝર મોડેલમાં વપરાતું નથી.
 
 class User(AbstractUser):
-    # રોલ માટે ચોઈસ
+    """
+    AbstractUser માંથી ઇનહેરિટ કરીને કસ્ટમ યુઝર મોડેલ.
+    """
+    
+    # યુઝર રોલ માટે ચોઈસ
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('teacher', 'Teacher'),
@@ -13,11 +20,10 @@ class User(AbstractUser):
         max_length=10, 
         choices=ROLE_CHOICES, 
         default='student',
-        verbose_name='User Role'
+        verbose_name='User Role',
         help_text='Defines the role of the user (Student or Teacher).'
     )
     
-
     def __str__(self):
         return self.username
 
@@ -25,17 +31,4 @@ class User(AbstractUser):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
 
-class Quiz(models.Model):
-    # 2. 'User' ને બદલે settings.AUTH_USER_MODEL નો ઉપયોગ કરો
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, # અહીં સુધારો કરો
-        on_delete=models.CASCADE
-    )
-    # ...
-
-class Result(models.Model):
-    # 2. 'User' ને બદલે settings.AUTH_USER_MODEL નો ઉપયોગ કરો
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, # અહીં સુધારો કરો
-        on_delete=models.CASCADE
-    )
+# ડુપ્લિકેટ Quiz અને Result મોડેલો અહીંથી દૂર કરવામાં આવ્યા છે.
