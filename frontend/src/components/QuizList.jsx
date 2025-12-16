@@ -1,39 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAvailableQuizzes } from '../api';
 
-// BASE_URL હવે api.js માં સેટ થયેલ હોવાથી, તમે તેને ટૂંકાવી શકો છો
-// જો કે, સ્પષ્ટતા માટે તેને રાખવું હોય તો રાખી શકાય.
-// const BASE_URL = 'http://127.0.0.1:8000/api/qms'; // જરૂર નથી
-
 function QuizList() {
+    // ✅ શરૂઆતમાં ખાતરી કરો કે તે ખાલી એરે [] છે.
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // GET વિનંતી મોકલો. api.js ઓટોમેટીકલી ટોકન અને baseURL ઉમેરશે.
-        // જો baseURL api.js માં 'http://127.0.0.1:8000' સેટ કરેલ હોય, તો:
+        // API કોલ પહેલા હંમેશા error અને loading ને રીસેટ કરો
+        setLoading(true);
+        setError(null);
+        
         fetchAvailableQuizzes('/api/qms/quizzes/') 
-            .then(response => {
-                // DRFનું ModelViewSet ક્યારેક 'results' માં ડેટા આપે છે
-                setQuizzes(response.data.results || response.data); 
+            .then(data => {
+                // બેકએન્ડમાંથી સીધો ડેટા એરે મેળવો
+                if (Array.isArray(data)) {
+                    setQuizzes(data);
+                } else {
+                    // જો response.data એરે ન હોય, તો તેને ખાલી એરે સેટ કરો
+                    setQuizzes([]); 
+                }
                 setLoading(false);
             })
             .catch(err => {
                 console.error("API Call Error:", err);
                 
-                // 401 ભૂલનું હેન્ડલિંગ
                 if (err.response && err.response.status === 401) {
-                    // જો 401 આવે, તો યુઝરને લૉગિન પેજ પર રીડાયરેક્ટ કરવું જોઈએ.
-                    setError("not access.Pleace login now.");
-                    // navigate('/login'); // જો તમે Router નો ઉપયોગ કરતા હોવ
+                    setError("not access. Pleace login now.");
                 } else {
+                    // જો કોઈ ભૂલ આવે, તો quizzes ને ખાલી એરે સેટ કરો
+                    setQuizzes([]); 
                     setError("quiz find error. chek the server.");
                 }
                 setLoading(false);
             });
     }, []);
 
+    // રેન્ડરિંગ: લોડિંગ, ભૂલ, અને પછી ક્વિઝ લિસ્ટ
     if (loading) {
         return <div>Loading the quiz...</div>;
     }
@@ -45,11 +49,14 @@ function QuizList() {
     return (
         <div style={{ padding: '20px' }}>
             <h2>📝 Uvailable quiz</h2>
-            {quizzes.length === 0 ? (
+            
+            {/* ✅ સુરક્ષિત ચેક: ખાતરી કરો કે quizzes એ એરે છે અને તેની લંબાઈ 0 છે */}
+            {Array.isArray(quizzes) && quizzes.length === 0 ? (
                 <p>Not found the quiz.</p>
             ) : (
                 <ul>
-                    {quizzes.map(quiz => (
+                    {/* ✅ સુરક્ષિત map: માત્ર જો quizzes એરે હોય તો જ map કરો */}
+                    {Array.isArray(quizzes) && quizzes.map(quiz => (
                         <li key={quiz.id} style={{ marginBottom: '10px', borderBottom: '1px dotted #ccc' }}>
                             <strong>{quiz.title}</strong> ({quiz.id})<br />
                             <small>{quiz.description}</small>
