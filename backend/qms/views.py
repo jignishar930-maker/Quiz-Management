@@ -4,9 +4,10 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from .models import Quiz, Question, Option, Result
+# ✅ અહીં QuizAttemptSerializer ઉમેર્યું છે
 from .serializers import (
     QuizSerializer, QuestionSerializer, OptionSerializer, 
-    ResultSerializer, QuizQuestionSerializer
+    ResultSerializer, QuizQuestionSerializer, QuizAttemptSerializer
 )
 
 # --- Standard ViewSets ---
@@ -14,50 +15,37 @@ from .serializers import (
 class QuizViewSet(viewsets.ModelViewSet):
     """
     API endpoint for listing and managing Quizzes.
-    Only authenticated users can see the list.
     """
-    # Quiz મોડેલ માટે 'created_at' દ્વારા સૉર્ટિંગ
     queryset = Quiz.objects.all().order_by('-created_at')
-    serializer_class = QuizSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    # ✅ આ મેથડ હવે યોગ્ય રીતે લખેલી છે
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return QuizSerializer
+        # જ્યારે કોઈ એક ક્વિઝ ખોલીએ ત્યારે પ્રશ્નો સાથેનો Serializer
+        return QuizAttemptSerializer
+
 class QuestionViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for managing Questions.
-    Admin/Staff only, includes the correct answer for management purposes.
-    """
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [permissions.IsAdminUser] # Only Admin can manage questions
+    permission_classes = [permissions.IsAdminUser]
 
 class OptionViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for managing Options.
-    Admin/Staff only.
-    """
     queryset = Option.objects.all()
     serializer_class = OptionSerializer
-    permission_classes = [permissions.IsAdminUser] # Only Admin can manage options
+    permission_classes = [permissions.IsAdminUser]
 
 class ResultViewSet(viewsets.ModelViewSet):
-    """
-    એડમિન માટે બધા ક્વિઝ પરિણામોનું સંચાલન.
-    """
-    # Result મોડેલ માટે 'completed_at' દ્વારા સૉર્ટિંગ
     queryset = Result.objects.all().order_by('-completed_at') 
     serializer_class = ResultSerializer
-    permission_classes = [permissions.IsAdminUser] 
-
+    permission_classes = [permissions.IsAdminUser]
 
 # ==========================================================
 # NEW: Quiz Attempt and Scoring Logic
 # ==========================================================
 
 class QuizQuestionListView(APIView):
-    """
-    API endpoint to retrieve all questions for a specific quiz (excluding correct answers).
-    Used by the frontend QuizAttempt component.
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, quiz_id, format=None):
@@ -66,18 +54,15 @@ class QuizQuestionListView(APIView):
         except Quiz.DoesNotExist:
             return Response({"detail": "Quiz not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get all questions related to the quiz
         questions = quiz.questions.all().prefetch_related('options')
-        
-        # Use QuizQuestionSerializer to ensure 'is_correct' is excluded.
         serializer = QuizQuestionSerializer(questions, many=True)
         
         return Response({
             "quiz_title": quiz.title,
-            "quiz_duration": quiz.duration,
+            # જો model માં duration ન હોય તો નીચેની લાઈન કાઢી નાખવી
+            # "quiz_duration": getattr(quiz, 'duration', None), 
             "questions": serializer.data
         })
-
 
 class QuizSubmissionView(APIView):
     """

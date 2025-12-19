@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAvailableQuizzes } from '../api';
+import {Link} from 'react-router-dom';
 
 function QuizList() {
     // ✅ શરૂઆતમાં ખાતરી કરો કે તે ખાલી એરે [] છે.
@@ -57,7 +58,11 @@ function QuizList() {
                 <ul>
                     {/* ✅ સુરક્ષિત map: માત્ર જો quizzes એરે હોય તો જ map કરો */}
                     {Array.isArray(quizzes) && quizzes.map(quiz => (
-                        <li key={quiz.id} style={{ marginBottom: '10px', borderBottom: '1px dotted #ccc' }}>
+                        <li key={quiz.id} style={{ marginBottom: '10px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
+                            <Link to={`/quiz/${quiz.id}`} style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff', textDecoration: 'none' }}>
+                              {quiz.title}
+                            </Link>
+                           <br />
                             <strong>{quiz.title}</strong> ({quiz.id})<br />
                             <small>{quiz.description}</small>
                         </li>

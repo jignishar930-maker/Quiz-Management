@@ -20,7 +20,6 @@ class CustomUserSerializer(serializers.ModelSerializer):
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
-        # Includes 'is_correct' - for admin/post-result views
         fields = ['id', 'text', 'is_correct']
 
 # --- Question Serializer (Full Details) ---
@@ -59,33 +58,33 @@ class ResultSerializer(serializers.ModelSerializer):
 # QUIZ ATTEMPT SERIALIZERS (Hiding the correct answer)
 # ==========================================================
 
-# 1. Option Serializer for Quiz Attempt (NO 'is_correct' field)
+# 1. Option Serializer (NO 'is_correct' field)
 class QuizOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
-        # SECURITY NOTE: We explicitly exclude 'is_correct' here to prevent cheating.
         fields = ['id', 'text']
 
-# 2. Question Serializer for Quiz Attempt (Uses QuizOptionSerializer)
+# 2. Question Serializer (Uses QuizOptionSerializer)
 class QuizQuestionSerializer(serializers.ModelSerializer):
-    # Use the new QuizOptionSerializer
     options = QuizOptionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
-        # Fields necessary for the user to attempt the question.
         fields = ['id', 'text', 'options']
 
-# 3. Quiz Serializer for Quiz Attempt (Includes the full questions list)
+# 3. Quiz Serializer for Attempt (Corrected Indentation)
 class QuizAttemptSerializer(serializers.ModelSerializer):
-    # Use the new QuizQuestionSerializer to nest the questions
+    questions_count = serializers.SerializerMethodField()
     questions = QuizQuestionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quiz
-        # ✅ સુધારો: 'duration' ફિલ્ડ અહીંથી પણ દૂર કર્યું.
-        fields = ['id', 'title', 'description', 'questions']
+        # ✅ સુધારો: 'questions_count' ને fields માં ઉમેર્યું
+        fields = ['id', 'title', 'description', 'questions', 'questions_count']
 
+    # ✅ સુધારો: આ મેથડ હવે Meta ની બહાર (પણ QuizAttemptSerializer ની અંદર) છે
+    def get_questions_count(self, obj):
+        return obj.questions.count()
 # --- Answer Submission Serializer (for POST request) ---
 class AnswerSubmissionSerializer(serializers.Serializer):
     question = serializers.IntegerField() # ID of the question

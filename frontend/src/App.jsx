@@ -4,6 +4,7 @@ import Login from './components/Login.jsx';
 import QuizList from './components/QuizList.jsx';
 import QuizAttempt from './components/QuizAttempt.jsx'; // This is the component we just finished
 import ResultPage from './components/ResultPage.jsx'; // NEW: Import the Result Page
+import QuizDetail from './components/QuizDetail'; // ✅ આ લાઈન ઉમેરો
 
 function App() {
   return (
@@ -50,6 +51,9 @@ function App() {
 
             {/* Optional: Add a 404 Not Found Page */}
             <Route path="*" element={<div className="text-center mt-20 text-xl text-gray-500">404: Page Not Found</div>} />
+            
+            <Route path="/quiz/:id" element={<QuizDetail />} />
+            
           </Routes>
         </main>
       </div>
