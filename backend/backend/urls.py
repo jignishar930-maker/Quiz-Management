@@ -22,22 +22,23 @@ URL configuration for backend project.
 # 💡 સુધારો: 'include' ને માત્ર એક જ વાર આયાત કરો
 from django.contrib import admin
 from django.urls import path, include
-from login_app.views import index_view
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    # NEW: રુટ URL (/) ને login_app ના index_view સાથે જોડો
-    path('', index_view, name='home'),
-    
+    # Admin પેનલ
     path('admin/', admin.site.urls),
     
-    # Auth URLs (Provided by Simple JWT/DRF Auth, if you set them up)
-    # Note: These paths should match whatever you are using in your project setup
-    path('api/auth/', include('rest_framework.urls')), # For browsable API login/logout
-    path('api/auth/', include('login_app.urls')), # For registration, token management etc.
+    # Authentication (Browsing login/logout)
+    path('api/auth/', include('rest_framework.urls')),
+    
+    # Registration અને Login એપના URLs
+    path('api/auth/', include('login_app.urls')),
 
-    # Quiz Management System URLs
+    # ✅ Quiz Management System (QMS) URLs
+    # આ લાઇન ઉપરની 'qms/urls.py' ને પ્રોજેક્ટ સાથે જોડે છે
     path('api/qms/', include('qms.urls')),
+    
+    # JWT Token મેળવવા અને રિફ્રેશ કરવા માટે
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

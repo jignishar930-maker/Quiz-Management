@@ -51,8 +51,7 @@ class ResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Result
-        fields = ['id', 'user', 'user_username', 'quiz', 'quiz_title', 'score', 'percentage', 'created_at']
-
+        fields = ['id', 'quiz', 'score', 'total_questions', 'percentage', 'completed_at'] # ✅ અહીં સુધારો
 
 # ==========================================================
 # QUIZ ATTEMPT SERIALIZERS (Hiding the correct answer)
