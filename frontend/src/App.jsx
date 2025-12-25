@@ -2,16 +2,16 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './components/Login.jsx';
 import QuizList from './components/QuizList.jsx';
-import QuizAttempt from './components/QuizAttempt.jsx'; // This is the component we just finished
-import ResultPage from './components/ResultPage.jsx'; // NEW: Import the Result Page
-import QuizDetail from './components/QuizDetail'; // ✅ આ લાઈન ઉમેરો
+import QuizAttempt from './components/QuizAttempt.jsx';
+import ResultsList from './components/ResultsList.jsx'; // ખાતરી કરો કે આ નામ સાચું છે
+import QuizDetail from './components/QuizDetail';
 
 function App() {
   return (
     <Router>
       <div className="App" style={{ fontFamily: 'Inter, sans-serif' }}>
         
-        {/* Navigation Header using Tailwind CSS classes for better styling */}
+        {/* Navigation Header */}
         <header className="bg-white shadow-md p-4 sm:px-6">
             <nav>
                 <ul className="flex space-x-6 text-lg font-medium">
@@ -21,11 +21,11 @@ function App() {
                     <li>
                         <Link to="/login" className="text-gray-600 hover:text-indigo-800 transition duration-150">Login</Link>
                     </li>
-                    {/* Placeholder for User Dashboard/Logout */}
                     <li>
                         <span className="text-gray-400">|</span>
                     </li>
                     <li>
+                        {/* ✅ આ લિંક હવે સાચા પેજ પર લઈ જશે */}
                         <Link to="/user/results" className="text-gray-600 hover:text-indigo-800 transition duration-150">My Results</Link>
                     </li>
                 </ul>
@@ -34,26 +34,21 @@ function App() {
 
         <main className="p-4 sm:p-6">
           <Routes>
-            {/* Default route shows the list of quizzes */}
+            {/* બધી ક્વિઝનું લિસ્ટ */}
             <Route path="/" element={<QuizList />} />
             
-            {/* Login Page */}
+            {/* લોગિન પેજ */}
             <Route path="/login" element={<Login />} />
             
-            {/* Quiz Attempt Page: quizId is a URL parameter (e.g., /attempt/5) */}
+            {/* ક્વિઝ આપવા માટેનું પેજ */}
+            <Route path="/quiz/:id" element={<QuizDetail />} />
             <Route path="/attempt/:quizId" element={<QuizAttempt />} />
             
-            {/* NEW: Quiz Result Page: resultId is a URL parameter */}
-            <Route path="/result/:resultId" element={<ResultPage />} />
-            
-            {/* User Results Listing (You can use QuizList component for now, or create a new one later) */}
-            <Route path="/user/results" element={<QuizList />} /> 
+            {/* ✅ સુધારો: યુઝરના બધા રિઝલ્ટ જોવા માટેનું લિસ્ટ પેજ */}
+            <Route path="/user/results" element={<ResultsList />} /> 
 
-            {/* Optional: Add a 404 Not Found Page */}
+            {/* 404 Page */}
             <Route path="*" element={<div className="text-center mt-20 text-xl text-gray-500">404: Page Not Found</div>} />
-            
-            <Route path="/quiz/:id" element={<QuizDetail />} />
-            
           </Routes>
         </main>
       </div>

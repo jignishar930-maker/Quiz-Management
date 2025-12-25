@@ -56,6 +56,7 @@ class Result(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     score = models.IntegerField(default=0)
     total_questions = models.IntegerField()
+    percentage = models.FloatField(default=0.0)
     completed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

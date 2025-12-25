@@ -91,6 +91,10 @@ export const submitQuiz = async (quizId, answers) => {
 };
 
 export const fetchUserResults = async () => {
-    const response = await axiosInstance.get('/qms/user-results/');
-    return response.data;
+    try {
+        const response = await axiosInstance.get('/qms/user-results/'); // Django URL સાથે મેચ થાય છે
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
 };
