@@ -34,10 +34,16 @@ class OptionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser]
 
 class ResultViewSet(viewsets.ModelViewSet):
-    # 'completed_at' ફિલ્ડ Result મોડેલમાં હોવું જરૂરી છે
-    queryset = Result.objects.all().order_by('-completed_at') 
+    # જો completed_at ન હોય તો '-id' વાપરો જેથી એરર ન આવે
+    queryset = Result.objects.all().order_by('-id') 
     serializer_class = ResultSerializer
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # એડમિન બધાના રિઝલ્ટ જોઈ શકે, યુઝર ફક્ત પોતાના
+        if self.request.user.is_staff:
+            return Result.objects.all().order_by('-id')
+        return Result.objects.filter(user=self.request.user).order_by('-id')
 
 # ==========================================================
 # Quiz Attempt and Scoring Logic
@@ -52,6 +58,8 @@ class QuizQuestionListView(APIView):
     def get(self, request, quiz_id, format=None):
         try:
             quiz = Quiz.objects.get(pk=quiz_id)
+            # ડ્યુરેશન મોકલવું જરૂરી છે જો React માં ટાઈમર વાપરવું હોય
+            quiz_duration = getattr(quiz, 'duration', 10) 
         except Quiz.DoesNotExist:
             return Response({"detail": "Quiz not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -60,6 +68,7 @@ class QuizQuestionListView(APIView):
         
         return Response({
             "quiz_title": quiz.title,
+            "quiz_duration": quiz_duration,
             "questions": serializer.data
         })
 
@@ -79,34 +88,40 @@ class QuizSubmissionView(APIView):
         except (Quiz.DoesNotExist, ValueError):
             return Response({"detail": "Quiz not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # જો યુઝરે પહેલેથી ક્વિઝ આપી દીધી હોય
-        if Result.objects.filter(user=user, quiz=quiz).exists():
-            return Response({"detail": "તમે આ ક્વિઝ પહેલેથી આપી દીધી છે."}, status=status.HTTP_400_BAD_REQUEST)
+        # જો યુઝરે પહેલેથી ક્વિઝ આપી દીધી હોય તો ફરી આપવા દેવી કે નહીં?
+        # જો તમે મંજૂરી આપવા માંગતા હોવ તો આ ચેક કાઢી નાખો.
+        # if Result.objects.filter(user=user, quiz=quiz).exists():
+        #     return Response({"detail": "તમે આ ક્વિઝ પહેલેથી આપી દીધી છે."}, status=status.HTTP_400_BAD_REQUEST)
 
         total_score = 0
+        total_possible_score = 0
         
-        # એટોમિક ટ્રાન્ઝેક્શન જેથી ડેટા અધૂરો સેવ ન થાય
         with transaction.atomic():
-            for q_id, selected_option_ids in user_answers.items():
+            for q_id, selected_val in user_answers.items():
                 try:
-                    question = Question.objects.get(pk=q_id, quiz=quiz)
+                    question = Question.objects.get(pk=int(q_id), quiz=quiz)
+                    marks = getattr(question, 'marks', 1)
+                    total_possible_score += marks
+                    
                     correct_options = list(question.options.filter(is_correct=True).values_list('id', flat=True))
                     
-                    # ખાતરી કરો કે IDs પૂર્ણાંક (int) છે
-                    formatted_selected = [int(id) for id in selected_option_ids] if isinstance(selected_option_ids, list) else [int(selected_option_ids)]
+                    # ફોર્મેટિંગ: React માંથી લિસ્ટ અથવા સિંગલ આઈડી આવે તો પણ હેન્ડલ કરે
+                    if isinstance(selected_val, list):
+                        formatted_selected = [int(i) for i in selected_val]
+                    else:
+                        formatted_selected = [int(selected_val)]
                     
                     if set(formatted_selected) == set(correct_options) and len(correct_options) > 0:
-                        total_score += getattr(question, 'marks', 1)
+                        total_score += marks
                 except (Question.DoesNotExist, ValueError, TypeError):
                     continue
 
-            # કુલ શક્ય માર્ક્સની ગણતરી
-            total_possible_score = sum(getattr(q, 'marks', 1) for q in quiz.questions.all())
+            # જો કોઈ જવાબ ન આપ્યો હોય તો પણ કુલ માર્ક્સ ગણો
+            if total_possible_score == 0:
+                total_possible_score = sum(getattr(q, 'marks', 1) for q in quiz.questions.all())
             
-            # ટકાવારીની ગણતરી
             percentage = (total_score / total_possible_score) * 100 if total_possible_score > 0 else 0
             
-            # રિઝલ્ટ સેવ કરવું
             result = Result.objects.create(
                 user=user,
                 quiz=quiz,
@@ -116,6 +131,7 @@ class QuizSubmissionView(APIView):
             )
 
         return Response({
+            "id": result.id,
             "detail": "Quiz submitted successfully.",
             "score": total_score,
             "total_questions": total_possible_score,

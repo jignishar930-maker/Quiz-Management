@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+// 1. Base URL સેટિંગ્સ
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
-// 1. Axios Instance
+// 2. Axios Instance બનાવો
+// આ ઇન્સ્ટન્સ દરેક રિક્વેસ્ટમાં 'application/json' હેડર આપોઆપ ઉમેરશે.
 export const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -10,28 +12,30 @@ export const axiosInstance = axios.create({
     },
 });
 
-// Request Interceptor: આપોઆપ ટોકન ઉમેરવા માટે
-axiosInstance.interceptors.request.use(async req => {
-    const accessToken = localStorage.getItem('access_token');
+// 3. Request Interceptor: દરેક રિક્વેસ્ટમાં ટોકન ઉમેરવા માટે
+// આ લોજિક એ સુનિશ્ચિત કરે છે કે જો યુઝર લોગિન હોય, તો તેનું ટોકન હેડરમાં જાય.
+axiosInstance.interceptors.request.use(async (config) => {
+    const accessToken = localStorage.getItem('access_token'); // અહીં નામ 'access_token' રાખ્યું છે
     if (accessToken) {
-        req.headers.Authorization = `Bearer ${accessToken}`;
+        config.headers.Authorization = `Bearer ${accessToken}`;
     }
-    return req;
-}, error => {
+    return config;
+}, (error) => {
     return Promise.reject(error);
 });
 
 
-// --- AUTHENTICATION FUNCTIONS ---
+// --- AUTHENTICATION FUNCTIONS (લોગિન અને રજીસ્ટ્રેશન) ---
 
 export const loginUser = async (username, password) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/token/`, { username, password });
         const { access, refresh } = response.data;
         
-        // જો 'jigu' નામનો યુઝર હોય તો તેને એડમિન રોલ આપવો
+        // જો 'jigu' નામનો યુઝર હોય તો તેને એડમિન રોલ આપવો, બાકી સ્ટુડન્ટ
         const role = (username === 'jigu') ? 'admin' : 'student'; 
         
+        // મહત્વનું: અહીં 'access_token' નામથી જ સ્ટોર કરો જેથી QuizAttempt માં ભૂલ ન આવે
         localStorage.setItem('access_token', access);
         localStorage.setItem('refresh_token', refresh);
         localStorage.setItem('user_role', role); 
@@ -39,11 +43,10 @@ export const loginUser = async (username, password) => {
 
         return { success: true, role }; 
     } catch (error) {
-        throw new Error(error.response?.data?.detail || 'લૉગિન નિષ્ફળ.');
+        throw new Error(error.response?.data?.detail || 'લોગિન નિષ્ફળ. યુઝરનેમ અથવા પાસવર્ડ તપાસો.');
     }
 };
 
-// ✅ આ ફંક્શન પાછું ઉમેર્યું છે
 export const registerUser = async (username, password, email, role) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/register/`, {
@@ -66,18 +69,21 @@ export const logoutUser = () => {
 };
 
 
-// --- QUIZ FUNCTIONS ---
+// --- QUIZ FUNCTIONS (ક્વિઝને લગતા ફંક્શન) ---
 
+// બધી ઉપલબ્ધ ક્વિઝ મેળવવા માટે
 export const fetchAvailableQuizzes = async () => {
     const response = await axiosInstance.get('/qms/quizzes/');
     return response.data;
 };
 
+// કોઈ એક ચોક્કસ ક્વિઝની વિગતો મેળવવા માટે
 export const fetchQuizDetail = async (quizId) => {
     const response = await axiosInstance.get(`/qms/quizzes/${quizId}/`);
     return response.data;
 };
 
+// ક્વિઝ સબમિટ કરવા માટે
 export const submitQuiz = async (quizId, answers) => {
     try {
         const response = await axiosInstance.post('/qms/submit/', {
@@ -86,15 +92,18 @@ export const submitQuiz = async (quizId, answers) => {
         });
         return response.data;
     } catch (error) {
-        throw new Error(error.response?.data?.detail || 'સબમિટ કરવામાં ભૂલ આવી.');
+        console.error("Submission Error Details:", error.response?.data);
+        throw new Error(error.response?.data?.erroe ||  'submission error.');
     }
 };
 
+// યુઝરના જૂના રિઝલ્ટ્સ જોવા માટે
 export const fetchUserResults = async () => {
     try {
-        const response = await axiosInstance.get('/qms/user-results/'); // Django URL સાથે મેચ થાય છે
+        const response = await axiosInstance.get('/qms/user-results/');
         return response.data;
     } catch (error) {
+        console.error("Results fetching error:", error);
         throw error;
     }
 };

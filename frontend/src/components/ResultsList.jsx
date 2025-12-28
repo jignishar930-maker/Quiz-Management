@@ -11,7 +11,7 @@ const ResultsList = () => {
         const data = await fetchUserResults();
         setResults(data);
       } catch (err) {
-        console.error("રિઝલ્ટ લોડ કરવામાં ભૂલ:", err);
+        console.error("Loading error:", err);
       } finally {
         setLoading(false);
       }
@@ -19,21 +19,21 @@ const ResultsList = () => {
     getResults();
   }, []);
 
-  if (loading) return <p>લોડ થઈ રહ્યું છે...</p>;
+  if (loading) return <p>Loading.......</p>;
 
   return (
     <div className="container mt-4">
-      <h2>મારા ક્વિઝ રિઝલ્ટ</h2>
+      <h2>My quiz result</h2>
       {results.length === 0 ? (
-        <p>તમે હજુ સુધી કોઈ ક્વિઝ આપી નથી.</p>
+        <p>you not attempt the quiz.</p>
       ) : (
         <table className="table table-striped mt-3">
           <thead className="table-dark">
             <tr>
-              <th>ક્વિઝ નામ</th>
-              <th>સ્કોર</th>
-              <th>ટકાવારી</th>
-              <th>તારીખ</th>
+              <th>Quiz Name</th>
+              <th>Score</th>
+              <th>Percentage</th>
+              <th>Date</th>
             </tr>
           </thead>
           <tbody>

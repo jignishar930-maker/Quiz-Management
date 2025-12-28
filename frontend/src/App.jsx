@@ -45,7 +45,7 @@ function App() {
             <Route path="/attempt/:quizId" element={<QuizAttempt />} />
             
             {/* ✅ સુધારો: યુઝરના બધા રિઝલ્ટ જોવા માટેનું લિસ્ટ પેજ */}
-            <Route path="/user/results" element={<ResultsList />} /> 
+            <Route path="/user/results" element={<ResultsList />} />
 
             {/* 404 Page */}
             <Route path="*" element={<div className="text-center mt-20 text-xl text-gray-500">404: Page Not Found</div>} />
