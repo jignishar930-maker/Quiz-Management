@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { submitQuiz } from '../api';
 import './QuizAttempt.css'; 
-import '../App.css';
-
-
-const API_BASE_URL = 'http://127.0.0.1:8000/api/qms';
+import '../App.css'; // સાચો રિલેટિવ પાથ
 
 const QuizAttempt = () => {
   const { quizId } = useParams();
@@ -20,77 +16,80 @@ const QuizAttempt = () => {
   const [timer, setTimer] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // ક્વિઝ ડેટા ફેચ કરવો
+  // ૧. ક્વિઝ ડેટા મેળવવો
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('authToken');
+    
     if (!token) {
-      navigate('/login');
+      navigate('/login'); // લોગિન વગર એક્સેસ ના મળે
       return;
     }
 
     const fetchQuizData = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/quiz/${quizId}/questions/`, {
-          headers: { Authorization: `Bearer ${token}` },
+        // બદલાયેલ URL: તમારા Django DefaultRouter મુજબ
+        const response = await axios.get(`http://127.0.0.1:8000/api/qms/quizzes/${quizId}/`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = response.data;
+        // Serializer મુજબ ડેટા સેટિંગ
+        setQuiz({
+          title: data.title || data.quiz_title || "Quiz",
+          duration: data.duration || data.quiz_duration || 10
         });
         
-        const { quiz_duration, questions, quiz_title } = response.data;
-        setQuiz({ title: quiz_title, duration: quiz_duration });
-        setQuestions(questions);
-        setTimer(quiz_duration * 60);
+        setQuestions(data.questions || []);
+        setTimer((data.duration || data.quiz_duration || 10) * 60);
         setLoading(false);
       } catch (err) {
-        setError("ક્વિઝ લોડ કરવામાં ભૂલ આવી.");
+        console.error("Fetch error details:", err);
+        setError("not load quiz. Pleace try again...");
         setLoading(false);
       }
     };
+
     fetchQuizData();
   }, [quizId, navigate]);
 
-  // આન્સર ચેન્જ હેન્ડલર
+  // ૨. જવાબ સેટ કરવા
   const handleAnswerChange = (questionId, optionId) => {
-    setUserAnswers(prev => ({ ...prev, [questionId]: [optionId] }));
+    setUserAnswers(prev => ({ ...prev, [questionId]: optionId }));
   };
 
-  // ક્વિઝ સબમિટ ફંક્શન
+  // ૩. ક્વિઝ સબમિટ કરવી
   const handleSubmitQuiz = useCallback(async (isAutoSubmit = false) => {
     if (isSubmitted) return;
-    
-    if (Object.keys(userAnswers).length === 0 && !isAutoSubmit) {
-        alert("કૃપા કરીને ઓછામાં ઓછો એક જવાબ પસંદ કરો.");
-        return;
-    }
-
     setIsSubmitted(true);
 
+    const token = localStorage.getItem('access_token') || localStorage.getItem('authToken');
+
     try {
-        const formattedAnswers = {};
-        Object.entries(userAnswers).forEach(([qId, selectedOptions]) => {
-            if (selectedOptions.length > 0) {
-                formattedAnswers[parseInt(qId)] = parseInt(selectedOptions[0]);
-            }
-        });
+      // તમારા urls.py મુજબ 'submit/' પાથ પર ડેટા મોકલો
+      await axios.post(`http://127.0.0.1:8000/api/qms/submit/`, {
+        quiz_id: parseInt(quizId),
+        answers: userAnswers
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-        const result = await submitQuiz(parseInt(quizId), formattedAnswers);
-
-        if (result) {
-            alert(`સબમિટ થઈ ગયું!\nતમારો સ્કોર: ${result.score} / ${result.total_questions}`);
-            navigate('/my-results'); 
-        }
+      alert("complaly submited!");
+      navigate('/my-results'); 
     } catch (err) {
-        setIsSubmitted(false);
-        alert("ભૂલ આવી: " + (err.message || "સર્વર કનેક્શન પ્રોબ્લેમ"));
+      console.error("Submit error:", err);
+      setIsSubmitted(false);
+      alert("submit error.");
     }
   }, [isSubmitted, userAnswers, quizId, navigate]);
 
-  // ટાઈમર લોજિક
+  // ૪. ટાઈમર લોજિક
   useEffect(() => {
     if (loading || !quiz || isSubmitted) return;
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          if (!isSubmitted) handleSubmitQuiz(true);
+          handleSubmitQuiz(true);
           return 0;
         }
         return prev - 1;
@@ -110,64 +109,46 @@ const QuizAttempt = () => {
 
   return (
     <div className="quiz-main-wrapper">
-      {/* Sticky Header */}
       <header className="quiz-attempt-header">
         <div className="header-inner">
-          <div className="quiz-info">
-            <h2>{quiz.title}</h2>
-            <p>કુલ પ્રશ્નો: {questions.length}</p>
-          </div>
+          <h2>{quiz.title}</h2>
           <div className={`timer-box ${timer < 60 ? 'critical' : ''}`}>
-            <span className="timer-icon">⏱️</span>
-            <span className="timer-val">{formatTime(timer)}</span>
+            <span>⏱️ {formatTime(timer)}</span>
           </div>
         </div>
       </header>
 
-      {/* Questions Area */}
       <main className="questions-container">
-        {questions.map((question, index) => (
-          <div key={question.id} className="question-card-modern">
-            <div className="question-header">
-              <span className="q-index">પ્રશ્ન {index + 1}</span>
+        {questions.length > 0 ? (
+          questions.map((question, index) => (
+            <div key={question.id} className="question-card-modern">
+              <h3 className="q-text">{index + 1}. {question.text}</h3>
+              <div className="options-grid">
+                {question.options && question.options.map((option) => (
+                  <label key={option.id} className={`option-box-modern ${userAnswers[question.id] === option.id ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name={`question_${question.id}`}
+                      value={option.id}
+                      checked={userAnswers[question.id] === option.id}
+                      onChange={() => handleAnswerChange(question.id, option.id)}
+                      disabled={isSubmitted}
+                    />
+                    <span className="option-label-text">{option.text}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-            <h3 className="q-text">{question.text}</h3>
-            
-            <div className="options-grid">
-              {question.options.map((option) => (
-                <label 
-                  key={option.id} 
-                  className={`option-box-modern ${userAnswers[question.id.toString()]?.includes(option.id.toString()) ? 'selected' : ''}`}
-                >
-                  <input
-                    type="radio"
-                    name={`question_${question.id}`}
-                    checked={userAnswers[question.id.toString()]?.includes(option.id.toString())}
-                    onChange={() => handleAnswerChange(question.id.toString(), option.id.toString())}
-                    disabled={isSubmitted}
-                  />
-                  <span className="option-label-text">{option.text}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p>There are no quition available in this quiz.</p>
+        )}
       </main>
 
-      {/* Bottom Action Bar */}
       <footer className="quiz-action-bar">
-        <div className="bar-content">
-          <p className="status-text">
-            તમે <strong>{Object.keys(userAnswers).length}</strong> / {questions.length} પ્રશ્નોના જવાબ આપ્યા છે.
-          </p>
-          <button
-            onClick={() => handleSubmitQuiz(false)}
-            disabled={isSubmitted || questions.length === 0}
-            className="btn-submit-advance"
-          >
-            {isSubmitted ? 'સબમિટ થઈ રહ્યું છે...' : 'ક્વિઝ સબમિટ કરો'}
-          </button>
-        </div>
+        <button onClick={() => handleSubmitQuiz(false)} disabled={isSubmitted} className="btn-submit-advance">
+          {isSubmitted ? 'Submitting...' : 'submit'}
+        </button>
       </footer>
     </div>
   );

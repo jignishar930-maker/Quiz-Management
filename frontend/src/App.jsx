@@ -1,52 +1,56 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Login from './components/Login.jsx';
-import QuizList from './components/QuizList.jsx';
-import QuizAttempt from './components/QuizAttempt.jsx';
-import ResultsList from './components/ResultsList.jsx'; // ખાતરી કરો કે આ નામ સાચું છે
-import QuizDetail from './components/QuizDetail';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import Login from '../src/components/Login';
+import QuizList from './components/QuizList'; // આ તમારું "Available Quizzes" પેજ છે
+import QuizAttempt from './components/QuizAttempt';
+import MyResults from './components/ResultsList';
 import './App.css';
 
-
 function App() {
+  // લોગિન સ્ટેટ ચેક કરવા માટે (Optional)
+
   return (
     <Router>
-      <div className="App" style={{ fontFamily: 'Inter, sans-serif' }}>
-        
-        {/* Navigation Header */}
-        <header className="bg-white shadow-md p-4 sm:px-6">
-           <nav className="nav-container">
-           <div className="logo"> QMS </div>
-           <ul className="nav-links">
+      <div className="app-container">
+        {/* --- Global Navigation Header --- */}
+        <header className="main-header">
+          <div className="nav-container">
+            <Link to="/" className="logo">QMS</Link>
+            <nav>
+              <ul className="nav-links">
                 <li><Link to="/" className="nav-item">Home</Link></li>
-                 <li><Link to="/login" className="nav-item">Admin Login</Link></li>
-                 <li><Link to="/student-login" className="nav-item">Student Login</Link></li>
-                 <li><Link to="/my-results" className="nav-item">Result Check</Link></li>
-           </ul>
-          </nav>
+                
+                <li><Link to="/login" className="nav-item">Student Login</Link></li>
+                <li><Link to="/my-results" className="nav-item">Result Check</Link></li>
+              </ul>
+            </nav>
+          </div>
         </header>
 
-        <main className="p-4 sm:p-6">
+        {/* --- Main Content Routes --- */}
+        <main className="content-area">
           <Routes>
-            {/* બધી ક્વિઝનું લિસ્ટ */}
+            {/* હોમ પેજ પર ક્વિઝ લિસ્ટ દેખાશે */}
             <Route path="/" element={<QuizList />} />
             
-            <Route path="/student-login" element={<Login />} />
-
             {/* લોગિન પેજ */}
             <Route path="/login" element={<Login />} />
             
             {/* ક્વિઝ આપવા માટેનું પેજ */}
-            <Route path="/quiz/:id" element={<QuizDetail />} />
-            <Route path="/attempt/:quizId" element={<QuizAttempt />} />
+            <Route path="/quiz/:quizId" element={<QuizAttempt />} />
             
-            {/* ✅ સુધારો: યુઝરના બધા રિઝલ્ટ જોવા માટેનું લિસ્ટ પેજ */}
-            <Route path="/my-results" element={<ResultsList />} />
+            {/* રીઝલ્ટ જોવા માટેનું પેજ */}
+            <Route path="/my-results" element={<MyResults />} />
 
-            {/* 404 Page */}
-            <Route path="*" element={<div className="text-center mt-20 text-xl text-gray-500">404: Page Not Found</div>} />
+            {/* જો કોઈ ખોટો પાથ નાખે તો હોમ પર રીડાયરેક્ટ કરવા માટે */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
+
+        {/* --- Optional Footer --- */}
+        <footer style={{ textAlign: 'center', padding: '20px', opacity: 0.5, fontSize: '0.8rem' }}>
+          © 2025 Quiz Management System | Neural Interface v2.0
+        </footer>
       </div>
     </Router>
   );

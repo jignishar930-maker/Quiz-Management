@@ -23,7 +23,7 @@ const Login = () => {
             <div className="login-box-card">
                 <div className="login-header-section">
                     <span className="lock-icon">🔒</span>
-                    <h2 className="login-title">Admin Login</h2>
+                    <h2 className="login-title">Student Login</h2>
                     <p className="login-subtitle">Enter your credentials to access the dashboard.</p>
                 </div>
                 

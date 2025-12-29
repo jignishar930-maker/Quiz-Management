@@ -1,11 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Login from './components/Login.jsx';
-import QuizList from './components/QuizList.jsx';
-import QuizAttempt from './components/QuizAttempt.jsx';
-import ResultsList from './components/ResultsList.jsx'; 
-import QuizDetail from './components/QuizDetail';
-import './App.css'; 
+import Login from './Login.jsx';
+import QuizList from './QuizList.jsx';
+import QuizAttempt from './QuizAttempt.jsx';
+import ResultsList from './ResultsList.jsx'; 
+import QuizDetail from './QuizDetail';
+import '..App.jsx'; 
 
 function App() {
   return (
