@@ -1,76 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchAvailableQuizzes } from '../api';
-import {Link} from 'react-router-dom';
+import '../App.css';
 
-function QuizList() {
-    // ✅ શરૂઆતમાં ખાતરી કરો કે તે ખાલી એરે [] છે.
+const QuizList = () => {
     const [quizzes, setQuizzes] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
-        // API કોલ પહેલા હંમેશા error અને loading ને રીસેટ કરો
-        setLoading(true);
-        setError(null);
-        
-        fetchAvailableQuizzes('/api/qms/quizzes/') 
-            .then(data => {
-                // બેકએન્ડમાંથી સીધો ડેટા એરે મેળવો
-                if (Array.isArray(data)) {
-                    setQuizzes(data);
-                } else {
-                    // જો response.data એરે ન હોય, તો તેને ખાલી એરે સેટ કરો
-                    setQuizzes([]); 
-                }
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error("API Call Error:", err);
-                
-                if (err.response && err.response.status === 401) {
-                    setError("not access. Pleace login now.");
-                } else {
-                    // જો કોઈ ભૂલ આવે, તો quizzes ને ખાલી એરે સેટ કરો
-                    setQuizzes([]); 
-                    setError("quiz find error. chek the server.");
-                }
-                setLoading(false);
-            });
+        fetchAvailableQuizzes().then(setQuizzes);
     }, []);
 
-    // રેન્ડરિંગ: લોડિંગ, ભૂલ, અને પછી ક્વિઝ લિસ્ટ
-    if (loading) {
-        return <div>Loading the quiz...</div>;
-    }
-
-    if (error) {
-        return <div style={{ color: 'red', padding: '20px' }}>{error}</div>;
-    }
-
     return (
-        <div style={{ padding: '20px' }}>
-            <h2>📝 Uvailable quiz</h2>
-            
-            {/* ✅ સુરક્ષિત ચેક: ખાતરી કરો કે quizzes એ એરે છે અને તેની લંબાઈ 0 છે */}
-            {Array.isArray(quizzes) && quizzes.length === 0 ? (
-                <p>Not found the quiz.</p>
-            ) : (
-                <ul>
-                    {/* ✅ સુરક્ષિત map: માત્ર જો quizzes એરે હોય તો જ map કરો */}
-                    {Array.isArray(quizzes) && quizzes.map(quiz => (
-                        <li key={quiz.id} style={{ marginBottom: '10px', borderBottom: '1px solid #ddd', paddingBottom: '10px' }}>
-                            <Link to={`/quiz/${quiz.id}`} style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff', textDecoration: 'none' }}>
-                              {quiz.title}
-                            </Link>
-                           <br />
-                            <strong>{quiz.title}</strong> ({quiz.id})<br />
-                            <small>{quiz.description}</small>
-                        </li>
-                    ))}
-                </ul>
-            )}
+        <div className="quiz-page-wrapper">
+            <h2 className="section-title">🚀 Available Quizzes</h2>
+            <div className="quiz-grid">
+                {quizzes.map(quiz => (
+                    <div key={quiz.id} className="quiz-card-modern">
+                        <div className="quiz-badge">New</div>
+                        <h3>{quiz.title}</h3>
+                        <p>{quiz.description || "Test your knowledge with this quiz!"}</p>
+                        <div className="quiz-footer">
+                            <span>Questions: {quiz.total_questions || 0}</span>
+                            <Link to={`/quiz/${quiz.id}`} className="start-btn">Start Quiz</Link>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
-}
+};
 
 export default QuizList;

@@ -1,101 +1,58 @@
-/* src/components/QuizAttempt.css */
+/* --- QuizAttempt.css (Update) --- */
 
-.quiz-attempt-container {
-    padding: 30px;
-    max-width: 900px;
-    margin: 0 auto;
-    font-family: Arial, sans-serif;
+/* આખા પેજનું બેકગ્રાઉન્ડ બદલવા માટે */
+.quiz-main-wrapper {
+  background-color: #f8faff !important;
+  min-height: 100vh !important;
+  padding-top: 20px !important;
+  padding-bottom: 120px !important;
+  display: block !important; /* ફ્લેક્સ હોય તો કાઢી નાખવા */
 }
 
-.quiz-attempt-container h2 {
-    color: #007bff;
-    text-align: center;
-    margin-bottom: 10px;
+/* ક્વિઝ કાર્ડને નવો લુક આપવા */
+.question-card-modern {
+  background: white !important;
+  border-radius: 20px !important;
+  padding: 35px !important;
+  margin: 30px auto !important;
+  max-width: 800px !important;
+  box-shadow: 0 15px 35px rgba(109, 40, 217, 0.1) !important;
+  border: 1px solid #ddd6fe !important;
+  text-align: left !important;
 }
 
-.quiz-description {
-    text-align: center;
-    color: #666;
-    margin-bottom: 30px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
+/* ઓપ્શન્સને મોટા અને સુંદર બનાવવા */
+.option-box-modern {
+  display: flex !important;
+  align-items: center !important;
+  padding: 18px 25px !important;
+  margin-bottom: 15px !important;
+  border: 2px solid #f3f4f6 !important;
+  border-radius: 15px !important;
+  cursor: pointer !important;
+  background: #ffffff !important;
+  transition: 0.3s all !important;
 }
 
-.question-card {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+.option-box-modern:hover {
+  background: #f5f3ff !important;
+  border-color: #a855f7 !important;
 }
 
-.question-card h4 {
-    margin-top: 0;
-    color: #333;
-    font-size: 1.1em;
+.option-box-modern.selected {
+  border-color: #6d28d9 !important;
+  background-color: #ede9fe !important;
 }
 
-.options-list {
-    margin-top: 15px;
-}
-
-.option-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    padding: 8px 10px;
-    background-color: #ffffff;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    transition: background-color 0.2s;
-}
-
-.option-item:hover {
-    background-color: #e9ecef;
-}
-
-.option-item input[type="radio"] {
-    margin-right: 10px;
-    cursor: pointer;
-}
-
-.option-item label {
-    flex-grow: 1;
-    cursor: pointer;
-}
-
-.submit-quiz-btn {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.2em;
-    cursor: pointer;
-    margin-top: 30px;
-    transition: background-color 0.3s;
-}
-
-.submit-quiz-btn:hover:not(:disabled) {
-    background-color: #1e7e34;
-}
-
-.submit-quiz-btn:disabled {
-    background-color: #8cc396;
-    cursor: not-allowed;
-}
-
-.submission-note {
-    text-align: center;
-    color: #888;
-    margin-top: 15px;
-    font-size: 0.9em;
-}
-
-.error-message {
-    color: #dc3545;
-    text-align: center;
-    font-weight: bold;
+/* સબમિટ બટન જે અત્યારે ગ્રીન દેખાય છે તેને બદલવા */
+.btn-submit-advance {
+  background: linear-gradient(135deg, #6d28d9, #4c1d95) !important;
+  color: white !important;
+  padding: 15px 40px !important;
+  border-radius: 12px !important;
+  font-size: 1.1rem !important;
+  font-weight: bold !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 20px rgba(109, 40, 217, 0.3) !important;
 }
